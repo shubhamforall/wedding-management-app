@@ -1,0 +1,90 @@
+:root {
+  --color-bg: #ffffff;
+  --color-bg-subtle: #f7f7f8;
+  --color-bg-raised: #ffffff;
+  --color-border: #e5e5e8;
+  --color-border-subtle: #eeeef0;
+  --color-text: #16161a;
+  --color-text-muted: #6b6b76;
+  --color-text-faint: #9a9aa4;
+
+  --color-primary: #7c3aed;
+  --color-primary-hover: #6d28d9;
+  --color-primary-fg: #ffffff;
+
+  --color-success: #16a34a;
+  --color-success-bg: #ecfdf3;
+  --color-warning: #d97706;
+  --color-warning-bg: #fffaeb;
+  --color-danger: #dc2626;
+  --color-danger-bg: #fef2f2;
+  --color-info: #2563eb;
+  --color-info-bg: #eff6ff;
+
+  --shadow-sm: 0 1px 2px rgba(16, 16, 20, 0.04);
+  --shadow-md: 0 4px 16px rgba(16, 16, 20, 0.08);
+  --shadow-lg: 0 12px 32px rgba(16, 16, 20, 0.12);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+}
+
+:root[data-theme='dark'] {
+  --color-bg: #0d0d10;
+  --color-bg-subtle: #17171b;
+  --color-bg-raised: #1b1b20;
+  --color-border: #2a2a31;
+  --color-border-subtle: #232328;
+  --color-text: #f2f2f4;
+  --color-text-muted: #a3a3ad;
+  --color-text-faint: #6f6f7a;
+
+  --color-primary: #a78bfa;
+  --color-primary-hover: #c4b5fd;
+  --color-primary-fg: #16161a;
+
+  --color-success: #4ade80;
+  --color-success-bg: #0f2417;
+  --color-warning: #fbbf24;
+  --color-warning-bg: #2a1f0a;
+  --color-danger: #f87171;
+  --color-danger-bg: #2a1414;
+  --color-info: #60a5fa;
+  --color-info-bg: #0f1d2e;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']):not([data-theme='dark']) {
+    --color-bg: #0d0d10;
+    --color-bg-subtle: #17171b;
+    --color-bg-raised: #1b1b20;
+    --color-border: #2a2a31;
+    --color-border-subtle: #232328;
+    --color-text: #f2f2f4;
+    --color-text-muted: #a3a3ad;
+    --color-text-faint: #6f6f7a;
+
+    --color-primary: #a78bfa;
+    --color-primary-hover: #c4b5fd;
+    --color-primary-fg: #16161a;
+
+    --color-success: #4ade80;
+    --color-success-bg: #0f2417;
+    --color-warning: #fbbf24;
+    --color-warning-bg: #2a1f0a;
+    --color-danger: #f87171;
+    --color-danger-bg: #2a1414;
+    --color-info: #60a5fa;
+    --color-info-bg: #0f1d2e;
+  }
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
