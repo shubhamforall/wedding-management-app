@@ -23,6 +23,9 @@ dist-ssr
 .claude/
 .codex/
 
+# Supabase CLI local cache (machine-specific link state, not project config)
+supabase/.temp/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
