@@ -4,7 +4,20 @@ Written for whoever (human or AI) picks this up next. Read this before touching 
 
 ## What this is
 
-A production-track multi-tenant SaaS wedding-planning app, replacing an Excel workbook (`Wedding_Management_Workbook.xlsx`, still in repo root). Built incrementally over 10 phases, all now complete. **Nothing has been run against a live Supabase project in this environment** — every phase was verified by (a) clean `tsc -b && vite build`, and (b) either a throwaway static-data Playwright screenshot or an unauthenticated router/redirect check. No real signed-in session has ever touched real data. That is the single most important gap to close next.
+A production-track multi-tenant SaaS wedding-planning app, replacing an Excel workbook (`Wedding_Management_Workbook.xlsx`, still in repo root). Built incrementally over 10 phases, all now complete.
+
+**Update**: a real Supabase project now exists and all 11 migrations (0001-0011) are applied — see "Live project" below. Signup/login/wedding-creation have been tested end-to-end for real. Everything past wedding-creation (guests, expenses, vendors, tasks, dashboard numbers, invite flow, second account) is still untested against real data as of this writing — pick up there.
+
+### Live project
+
+- Supabase project ref: `xniwyxobsfvifwdfrpwq`, region `ap-south-1` (Mumbai)
+- `.env` in repo root is filled in with real `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` — **do not commit this**, it's gitignored, but be aware it now holds live (if low-risk, anon-only) credentials
+- To run migrations against it again in future: `SUPABASE_ACCESS_TOKEN=<token> npx supabase db push --password '<db password>' --yes` (token from Supabase dashboard → Account → Access Tokens; db password was set at project creation)
+- **A local DNS quirk on this dev machine**: the default resolver (via the router) fails to resolve `*.supabase.co` — `curl`/`nslookup` need `--resolve host:443:<ip>` or an explicit DNS server (`nslookup host 1.1.1.1`) to work from this shell. The browser is unaffected (uses its own/secure DNS). Not a project issue, just this machine's network — if migrations/tests weirdly fail with `Could not resolve host`, this is why.
+
+### Bug found and fixed during first real test
+
+`0011_fix_weddings_select_policy.sql` — the original `weddings` SELECT RLS policy (`is_wedding_member(id, 'viewer')` only) failed for the wedding creator immediately after `INSERT ... RETURNING` (i.e. any `.insert(...).select().single()` call), because that policy depends on a `wedding_members` row an `AFTER INSERT` trigger creates, and Postgres evaluates the RETURNING clause's SELECT-policy check before that trigger's effect is visible to it. Confirmed via curl: `return=minimal` (no RETURNING) → 201 success; `return=representation` (RETURNING) → 403 `new row violates row-level security policy`. Fixed by adding `owner_id = auth.uid() OR ...` to the policy. **If you see this exact error pattern on any other table with a similar "creator-gets-auto-membership-via-trigger" shape, check for the same class of bug** — nothing else was audited for it yet, this was found and fixed reactively on `weddings` only.
 
 ## Source of truth hierarchy
 
@@ -61,7 +74,15 @@ src/
 supabase/
   migrations/     0001 through 0010, sequential, see below
   functions/
-    send-invitation-email/   Deno edge function, Resend-based, needs RESEND_API_KEY + APP_URL secrets to actually send
+    send-invitation-email/   Deno edge function, Resend-based. DEPLOYED and LIVE on the real project as of this
+                              writing — RESEND_API_KEY and APP_URL secrets are both set, delivery confirmed working
+                              (real email received). Sender is Resend's sandbox address (onboarding@resend.dev),
+                              which can only deliver to the email the Resend account was signed up with — inviting
+                              arbitrary real people needs a verified domain in Resend (not done yet, needs a domain
+                              the user owns). APP_URL is currently http://localhost:5173 (vite.config.ts now pins
+                              the dev server to that port via server.port/strictPort) — MUST be updated to the real
+                              Vercel URL via `supabase secrets set APP_URL=...` once deployed, or invite links will
+                              point at localhost.
 ```
 
 ## Database — every migration, in order
@@ -76,8 +97,9 @@ supabase/
 8. **`0008_wedding_info_lists.sql`**: `emergency_contacts`, `important_numbers` — the gap-fill mentioned above.
 9. **`0009_documents_storage.sql`**: private Storage bucket `documents`, RLS on `storage.objects` keyed by treating the first path segment (`${wedding_id}/...`) as the tenant boundary, same isolation model as every table.
 10. **`0010_notifications.sql`**: `notifications` table + RLS (`user_id = auth.uid()` only) + triggers: member-joined-via-invitation notifies active owners, role-change/removal notifies the affected user.
+11. **`0011_fix_weddings_select_policy.sql`**: bug fix, see "Bug found and fixed" above. Reactive fix, applied only to `weddings` — not audited elsewhere yet.
 
-**Not yet run anywhere.** Next session needs to either `supabase db push` against a real project or paste these into the SQL editor in order.
+**All 11 are applied** to the live project (`xniwyxobsfvifwdfrpwq`) as of this writing. For a fresh project, run `supabase db push` (or paste into SQL editor) 0001 through 0011 in order.
 
 ## Auth & multi-tenancy model
 
@@ -104,10 +126,11 @@ Bottom nav (mobile) + Sidebar (desktop) config lives in `src/app/navigation.ts` 
 
 1. **Create the real Supabase project.** Run all 10 migrations in order. Copy `.env.example` → `.env`, fill in `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`.
 2. **`supabase gen types typescript --project-id <id> > src/types/database-generated.ts`**, then swap `src/lib/supabase.ts` back to `createClient<Database>(...)`. This closes the biggest type-safety gap in the codebase.
-3. **Deploy the edge function**: `supabase functions deploy send-invitation-email`, set `RESEND_API_KEY` + `APP_URL` secrets. Without this, invitations still work (the row exists, owner can copy/share the link manually) but no email goes out.
+3. ~~Deploy the edge function~~ **Done.** `send-invitation-email` is deployed and confirmed sending real emails via Resend. Remaining: verify a domain in Resend when ready to invite people other than the account owner, and update `APP_URL` secret to the real Vercel URL post-deploy.
 4. **Configure Google OAuth** in the Supabase Auth dashboard if you want that login path live.
-5. **Walk the app as a real user, once, start to finish**: sign up → create wedding → invite a second account → accept invite → add a guest, an expense, a vendor, a task → confirm Dashboard numbers actually update → upload a document → check it downloads. This has never been done. Expect to find bugs — none of this has been proven against Postgres, only against TypeScript's type checker and static screenshots.
-6. **Settings page is a stub** (`ComingSoon`). The workbook's Settings sheet maps to the `list_options` table, which the *app* already fully uses (every dropdown reads from it via `useListOptions`), but there's no UI for a user to *edit* those lists — they're stuck with the seeded defaults unless someone edits `list_options` rows directly in the DB. Building that UI is probably the next real feature, not a polish item.
+5. **Walk the app as a real user, once, start to finish**: sign up → create wedding → invite a second account → accept invite → add a guest, an expense, a vendor, a task → confirm Dashboard numbers actually update → upload a document → check it downloads. Wedding creation and invitation-email delivery are now confirmed working; the rest of this list (guests/expenses/vendors/tasks/second-account-accept/dashboard-refresh/document-upload) is still unverified against real data.
+6. ~~Settings page is a stub~~ **Built.** `src/features/settings/` — full CRUD UI over `list_options` (all 16 workbook dropdown lists), role-gated (viewer read-only, member add/edit/reorder, owner-only delete matching the RLS). Live-wired: edits here show up immediately in every other module's dropdowns since they share the same `useListOptions` query key.
+7. **Sidebar was reorganized** (`src/app/navigation.ts` → `sidebarNavGroups`, `src/components/layout/Sidebar.tsx`): top group is workspace-level (Dashboard/Members/Settings), bottom group under a "Wedding Planning" label is all the data modules. Notifications was removed from the sidebar list (there's a bell icon with unread badge in `AppShell`'s top-right `TopActions` instead — `src/components/layout/AppShell.tsx`). Search was also removed as a sidebar nav link and replaced with an inline search box above the nav that navigates to `/w/:weddingId/search?q=...`; `SearchPage` reads that `q` param on mount and on subsequent navigations to the same route (via a `useEffect` on `searchParams`, since the route doesn't remount).
 7. **Bundle size / perf**: code-splitting is done (initial chunk ~256KB gzip ~80KB), but recharts still makes `BudgetPage`'s chunk ~377KB — acceptable since it's lazy and only loads when Budget is visited, not blocking.
 8. **No offline support, no PWA manifest** — "Offline Friendly" from the original brief was never addressed.
 9. **Global Search** is client-side-filter-over-already-fetched-data (reuses each module's existing "fetch all" hook, small per-wedding datasets by design). Fine at current scale; would need real server-side search (Postgres full-text or similar) if guest/expense counts ever got large — they won't, per-wedding datasets are inherently small (30-60 families, etc.).

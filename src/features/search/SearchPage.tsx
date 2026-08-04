@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Search as SearchIcon, Users, Receipt, ShoppingBag, Package, ListTodo, Store, Contact as ContactIcon, FolderOpen } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useCurrentWedding } from '@/features/weddings/WeddingProvider';
@@ -36,7 +36,15 @@ function matches(query: string, ...fields: (string | null | undefined)[]) {
 
 export function SearchPage() {
   const { wedding } = useCurrentWedding();
-  const [query, setQuery] = useState('');
+  const [searchParams] = useSearchParams();
+  const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
+
+  // Re-seed if the sidebar search box sends a new query while this page is
+  // already mounted (route doesn't remount, only the search param changes).
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q !== null) setQuery(q);
+  }, [searchParams]);
 
   const { data: guests } = useGuests(wedding.id);
   const { data: expenses } = useExpenses(wedding.id);

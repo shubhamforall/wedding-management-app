@@ -47,3 +47,42 @@ export const moreNav: NavItem[] = [
   { label: 'Notifications', path: 'notifications', icon: Bell },
   { label: 'Settings', path: 'settings', icon: Settings },
 ];
+
+export interface NavGroup {
+  label: string | null;
+  items: NavItem[];
+}
+
+const allSidebarItems = [primaryNav[0]!, moreNav[0]!, ...primaryNav.slice(1, -1), ...moreNav.slice(1)];
+const byLabel = (label: string) => allSidebarItems.find((item) => item.label === label)!;
+
+// Top: workspace-level nav (overview + collaboration/utility, not wedding
+// data entry). Bottom: every module that's actually wedding planning
+// content. Two visually separated groups per product request — avoids the
+// flat list mixing "manage the workspace" with "plan the wedding".
+// Search and Notifications are deliberately excluded here: Notifications
+// lives as the bell icon in AppShell's top-right corner, and Search is a
+// direct input rendered inline above this nav (see Sidebar.tsx) rather
+// than a link to a separate page.
+export const sidebarNavGroups: NavGroup[] = [
+  {
+    label: null,
+    items: [byLabel('Dashboard'), byLabel('Members'), byLabel('Settings')],
+  },
+  {
+    label: 'Wedding Planning',
+    items: [
+      byLabel('Wedding Info'),
+      byLabel('Guests'),
+      byLabel('Finance'),
+      byLabel('Tasks'),
+      byLabel('Shopping'),
+      byLabel('Inventory'),
+      byLabel('Vendors'),
+      byLabel('Timeline'),
+      byLabel('Stay Arrangement'),
+      byLabel('Contacts'),
+      byLabel('Documents'),
+    ],
+  },
+];

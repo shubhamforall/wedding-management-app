@@ -1,33 +1,19 @@
-import { Monitor, Moon, Sun } from 'lucide-react';
-import { useTheme, type ThemePreference } from '@/hooks/useTheme';
-import { cn } from '@/lib/cn';
-
-const options: { value: ThemePreference; icon: typeof Sun; label: string }[] = [
-  { value: 'light', icon: Sun, label: 'Light' },
-  { value: 'dark', icon: Moon, label: 'Dark' },
-  { value: 'system', icon: Monitor, label: 'System' },
-];
+import { Moon, Sun } from 'lucide-react';
+import { useTheme } from '@/hooks/useTheme';
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+  const Icon = isDark ? Sun : Moon;
 
   return (
-    <div className="inline-flex items-center gap-1 rounded-[var(--radius-md)] border border-border bg-bg-subtle p-1">
-      {options.map(({ value, icon: Icon, label }) => (
-        <button
-          key={value}
-          type="button"
-          aria-label={label}
-          aria-pressed={theme === value}
-          onClick={() => setTheme(value)}
-          className={cn(
-            'flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] transition-colors',
-            theme === value ? 'bg-bg-raised text-text shadow-[var(--shadow-sm)]' : 'text-text-muted hover:text-text'
-          )}
-        >
-          <Icon className="h-4 w-4" />
-        </button>
-      ))}
-    </div>
+    <button
+      type="button"
+      aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-bg-raised text-text-muted transition-colors hover:bg-bg-subtle hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+    >
+      <Icon className="h-4 w-4" />
+    </button>
   );
 }

@@ -19,6 +19,10 @@ dist-ssr
 .env.*
 !.env.example
 
+# AI assistant local config (never push - may contain secrets)
+.claude/
+.codex/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -76,7 +76,7 @@ export function TaskFormDialog({
 
   return (
     <Dialog open={open} onClose={onClose} title={task ? 'Edit Task' : 'Add Task'}>
-      <form className="max-h-[70vh] space-y-4 overflow-y-auto pr-1" onSubmit={handleSubmit(onSubmit)}>
+      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <Input label="Task" error={errors.task?.message} {...register('task', { required: 'Task is required' })} />
 
         <div className="grid grid-cols-2 gap-4">

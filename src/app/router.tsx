@@ -5,7 +5,6 @@ import { AppShell } from '@/components/layout/AppShell';
 import { MorePage } from '@/components/layout/MorePage';
 import { NotFoundPage } from '@/components/layout/NotFoundPage';
 import { RouteErrorBoundary } from '@/components/layout/RouteErrorBoundary';
-import { ComingSoon } from '@/components/ui/ComingSoon';
 import { FullPageSpinner } from '@/components/ui/Spinner';
 
 // Route-level code splitting: every module page below is its own chunk,
@@ -125,7 +124,7 @@ export const router = createBrowserRouter([
         path: 'notifications',
         lazy: async () => ({ Component: (await import('@/features/notifications/NotificationsPage')).NotificationsPage }),
       },
-      { path: 'settings', element: <ComingSoon moduleName="Settings" /> },
+      { path: 'settings', lazy: async () => ({ Component: (await import('@/features/settings/SettingsPage')).SettingsPage }) },
     ],
   },
 

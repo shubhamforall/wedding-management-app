@@ -1,4 +1,6 @@
 :root {
+  color-scheme: light;
+
   --color-bg: #ffffff;
   --color-bg-subtle: #f7f7f8;
   --color-bg-raised: #ffffff;
@@ -31,6 +33,8 @@
 }
 
 :root[data-theme='dark'] {
+  color-scheme: dark;
+
   --color-bg: #0d0d10;
   --color-bg-subtle: #17171b;
   --color-bg-raised: #1b1b20;
@@ -60,6 +64,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']):not([data-theme='dark']) {
+    color-scheme: dark;
+
     --color-bg: #0d0d10;
     --color-bg-subtle: #17171b;
     --color-bg-raised: #1b1b20;
@@ -87,4 +93,57 @@
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
+}
+
+input[type='date'],
+input[type='datetime-local'],
+input[type='month'],
+input[type='time'],
+input[type='week'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] input[type='date'],
+:root[data-theme='dark'] input[type='datetime-local'],
+:root[data-theme='dark'] input[type='month'],
+:root[data-theme='dark'] input[type='time'],
+:root[data-theme='dark'] input[type='week'] {
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']):not([data-theme='dark']) input[type='date'],
+  :root:not([data-theme='light']):not([data-theme='dark']) input[type='datetime-local'],
+  :root:not([data-theme='light']):not([data-theme='dark']) input[type='month'],
+  :root:not([data-theme='light']):not([data-theme='dark']) input[type='time'],
+  :root:not([data-theme='light']):not([data-theme='dark']) input[type='week'] {
+    color-scheme: dark;
+  }
+}
+
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='datetime-local']::-webkit-calendar-picker-indicator,
+input[type='month']::-webkit-calendar-picker-indicator,
+input[type='time']::-webkit-calendar-picker-indicator,
+input[type='week']::-webkit-calendar-picker-indicator {
+  opacity: 0;
+}
+
+:root[data-theme='dark'] input[type='date']::-webkit-calendar-picker-indicator,
+:root[data-theme='dark'] input[type='datetime-local']::-webkit-calendar-picker-indicator,
+:root[data-theme='dark'] input[type='month']::-webkit-calendar-picker-indicator,
+:root[data-theme='dark'] input[type='time']::-webkit-calendar-picker-indicator,
+:root[data-theme='dark'] input[type='week']::-webkit-calendar-picker-indicator {
+  opacity: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']):not([data-theme='dark']) input[type='date']::-webkit-calendar-picker-indicator,
+  :root:not([data-theme='light']):not([data-theme='dark'])
+    input[type='datetime-local']::-webkit-calendar-picker-indicator,
+  :root:not([data-theme='light']):not([data-theme='dark']) input[type='month']::-webkit-calendar-picker-indicator,
+  :root:not([data-theme='light']):not([data-theme='dark']) input[type='time']::-webkit-calendar-picker-indicator,
+  :root:not([data-theme='light']):not([data-theme='dark']) input[type='week']::-webkit-calendar-picker-indicator {
+    opacity: 0;
+  }
 }

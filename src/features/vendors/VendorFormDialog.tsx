@@ -74,7 +74,7 @@ export function VendorFormDialog({
 
   return (
     <Dialog open={open} onClose={onClose} title={vendor ? 'Edit Vendor' : 'Add Vendor'}>
-      <form className="max-h-[70vh] space-y-4 overflow-y-auto pr-1" onSubmit={handleSubmit(onSubmit)}>
+      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <Input
           label="Vendor Name"
           error={errors.name?.message}

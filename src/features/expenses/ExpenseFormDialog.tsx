@@ -77,7 +77,7 @@ export function ExpenseFormDialog({
 
   return (
     <Dialog open={open} onClose={onClose} title={expense ? 'Edit Expense' : 'Add Expense'}>
-      <form className="max-h-[70vh] space-y-4 overflow-y-auto pr-1" onSubmit={handleSubmit(onSubmit)}>
+      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <div className="grid grid-cols-2 gap-4">
           <Input
             label="Date"

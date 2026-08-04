@@ -85,7 +85,7 @@ export function TimelineFormDialog({
 
   return (
     <Dialog open={open} onClose={onClose} title={timelineEvent ? 'Edit Event' : 'Add Event'}>
-      <form className="max-h-[70vh] space-y-4 overflow-y-auto pr-1" onSubmit={handleSubmit(onSubmit)}>
+      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <Select
           label="Event"
           value={isCustom ? 'Custom' : selectedEvent}
