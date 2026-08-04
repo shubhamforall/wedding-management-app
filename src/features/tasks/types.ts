@@ -26,5 +26,9 @@ export interface TaskInput {
 
 export function isOverdue(t: Pick<Task, 'status' | 'due_date'>) {
   if (!t.due_date || t.status === 'Completed') return false;
-  return new Date(t.due_date) < new Date(new Date().toDateString());
+  // Plain YYYY-MM-DD strings compare lexicographically fine — avoids native
+  // Date's UTC-midnight parsing of date-only strings, which mislabeled
+  // same-day tasks as overdue in any timezone ahead of UTC.
+  const todayLocal = new Date().toLocaleDateString('en-CA');
+  return t.due_date < todayLocal;
 }

@@ -4,7 +4,9 @@ import { isOverdue } from './types';
 function daysFromNow(days: number) {
   const d = new Date();
   d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
+  // Local date, matching isOverdue's local-date comparison — toISOString()
+  // would convert to UTC first and could land on the wrong calendar day.
+  return d.toLocaleDateString('en-CA');
 }
 
 describe('isOverdue', () => {

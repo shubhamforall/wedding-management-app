@@ -1,11 +1,12 @@
-import { lazy, Suspense } from 'react';
-import { createBrowserRouter } from 'react-router-dom';
+import { lazy, Suspense, useEffect } from 'react';
+import { createBrowserRouter, useParams } from 'react-router-dom';
 import { RequireAuth } from '@/features/auth/RequireAuth';
 import { AppShell } from '@/components/layout/AppShell';
 import { MorePage } from '@/components/layout/MorePage';
 import { NotFoundPage } from '@/components/layout/NotFoundPage';
 import { RouteErrorBoundary } from '@/components/layout/RouteErrorBoundary';
 import { FullPageSpinner } from '@/components/ui/Spinner';
+import { setPendingInviteToken } from '@/lib/pendingInvite';
 
 // Route-level code splitting: every module page below is its own chunk,
 // loaded only when its route is visited. Shell/layout/auth-guard stay
@@ -40,6 +41,24 @@ function AcceptInviteGate() {
     <Suspense fallback={<FullPageSpinner />}>
       <AcceptInvitePage />
     </Suspense>
+  );
+}
+
+// Not wrapped in RequireAuth itself — this must run and persist the token
+// even when the visitor isn't logged in yet, so it survives the full
+// signup → email verification → click-link-in-a-new-context journey (which
+// loses React Router's in-memory redirect state entirely).
+function InviteRoute() {
+  const { token } = useParams<{ token: string }>();
+
+  useEffect(() => {
+    if (token) setPendingInviteToken(token);
+  }, [token]);
+
+  return (
+    <RequireAuth>
+      <AcceptInviteGate />
+    </RequireAuth>
   );
 }
 
@@ -83,11 +102,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/invite/:token',
-    element: (
-      <RequireAuth>
-        <AcceptInviteGate />
-      </RequireAuth>
-    ),
+    element: <InviteRoute />,
   },
   {
     path: '/w/:weddingId',

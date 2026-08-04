@@ -5,6 +5,7 @@ import { AuthLayout } from './AuthLayout';
 import { signInWithEmail, signInWithGoogle } from './api';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { consumePendingInviteToken } from '@/lib/pendingInvite';
 
 interface FormValues {
   email: string;
@@ -24,7 +25,8 @@ export function LoginPage() {
   const onSubmit = async (values: FormValues) => {
     try {
       await signInWithEmail(values.email, values.password);
-      navigate(redirectTo, { replace: true });
+      const pendingInviteToken = consumePendingInviteToken();
+      navigate(pendingInviteToken ? `/invite/${pendingInviteToken}` : redirectTo, { replace: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Could not sign in.');
     }

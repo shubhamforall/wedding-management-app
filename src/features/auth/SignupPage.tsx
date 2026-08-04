@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { MailCheck } from 'lucide-react';
@@ -7,6 +7,7 @@ import { AuthLayout } from './AuthLayout';
 import { signInWithGoogle, signUpWithEmail } from './api';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { consumePendingInviteToken } from '@/lib/pendingInvite';
 
 interface FormValues {
   fullName: string;
@@ -15,6 +16,7 @@ interface FormValues {
 }
 
 export function SignupPage() {
+  const navigate = useNavigate();
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
   const {
     register,
@@ -24,7 +26,14 @@ export function SignupPage() {
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await signUpWithEmail(values.email, values.password, values.fullName);
+      const { session } = await signUpWithEmail(values.email, values.password, values.fullName);
+      if (session) {
+        // Email confirmation is disabled on this project — signUp already
+        // returned an active session, no verification email is coming.
+        const pendingInviteToken = consumePendingInviteToken();
+        navigate(pendingInviteToken ? `/invite/${pendingInviteToken}` : '/', { replace: true });
+        return;
+      }
       setSubmittedEmail(values.email);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Could not sign up.');
