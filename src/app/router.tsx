@@ -2,7 +2,6 @@ import { lazy, Suspense, useEffect } from 'react';
 import { createBrowserRouter, useParams } from 'react-router-dom';
 import { RequireAuth } from '@/features/auth/RequireAuth';
 import { AppShell } from '@/components/layout/AppShell';
-import { MorePage } from '@/components/layout/MorePage';
 import { NotFoundPage } from '@/components/layout/NotFoundPage';
 import { RouteErrorBoundary } from '@/components/layout/RouteErrorBoundary';
 import { FullPageSpinner } from '@/components/ui/Spinner';
@@ -124,7 +123,6 @@ export const router = createBrowserRouter([
         ],
       },
       { path: 'tasks', lazy: async () => ({ Component: (await import('@/features/tasks/TasksPage')).TasksPage }) },
-      { path: 'more', element: <MorePage /> },
       { path: 'wedding-info', lazy: async () => ({ Component: (await import('@/features/weddingInfo/WeddingInfoPage')).WeddingInfoPage }) },
       { path: 'shopping', lazy: async () => ({ Component: (await import('@/features/shopping/ShoppingPage')).ShoppingPage }) },
       { path: 'inventory', lazy: async () => ({ Component: (await import('@/features/inventory/InventoryPage')).InventoryPage }) },

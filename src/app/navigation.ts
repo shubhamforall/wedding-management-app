@@ -3,7 +3,6 @@ import {
   Users,
   Wallet,
   CheckSquare,
-  MoreHorizontal,
   ShoppingBag,
   Package,
   Store,
@@ -14,7 +13,7 @@ import {
   UserCog,
   Settings,
   Search,
-  Info,
+  IdCard,
   Bell,
   type LucideIcon,
 } from 'lucide-react';
@@ -25,16 +24,15 @@ export interface NavItem {
   icon: LucideIcon;
 }
 
-export const primaryNav: NavItem[] = [
+const primaryNav: NavItem[] = [
   { label: 'Dashboard', path: '', icon: LayoutDashboard },
   { label: 'Guests', path: 'guests', icon: Users },
   { label: 'Finance', path: 'finance', icon: Wallet },
   { label: 'Tasks', path: 'tasks', icon: CheckSquare },
-  { label: 'More', path: 'more', icon: MoreHorizontal },
 ];
 
-export const moreNav: NavItem[] = [
-  { label: 'Wedding Info', path: 'wedding-info', icon: Info },
+const secondaryNav: NavItem[] = [
+  { label: 'Wedding Info', path: 'wedding-info', icon: IdCard },
   { label: 'Shopping', path: 'shopping', icon: ShoppingBag },
   { label: 'Inventory', path: 'inventory', icon: Package },
   { label: 'Vendors', path: 'vendors', icon: Store },
@@ -53,17 +51,18 @@ export interface NavGroup {
   items: NavItem[];
 }
 
-const allSidebarItems = [primaryNav[0]!, moreNav[0]!, ...primaryNav.slice(1, -1), ...moreNav.slice(1)];
+const allSidebarItems = [...primaryNav, ...secondaryNav];
 const byLabel = (label: string) => allSidebarItems.find((item) => item.label === label)!;
 
 // Top: workspace-level nav (overview + collaboration/utility, not wedding
 // data entry). Bottom: every module that's actually wedding planning
-// content. Two visually separated groups per product request — avoids the
-// flat list mixing "manage the workspace" with "plan the wedding".
-// Search and Notifications are deliberately excluded here: Notifications
-// lives as the bell icon in AppShell's top-right corner, and Search is a
-// direct input rendered inline above this nav (see Sidebar.tsx) rather
-// than a link to a separate page.
+// content. Two visually separated groups — avoids the flat list mixing
+// "manage the workspace" with "plan the wedding". Search and Notifications
+// are deliberately excluded: Notifications lives as the bell icon in
+// AppShell's top-right corner, and Search is a direct input rendered
+// inline above this nav (see Sidebar.tsx) rather than a link to a page.
+// This is the single nav source for both desktop (fixed rail) and mobile
+// (hamburger-triggered slide-in drawer) — same component, same list.
 export const sidebarNavGroups: NavGroup[] = [
   {
     label: null,

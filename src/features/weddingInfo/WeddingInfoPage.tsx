@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, Info } from 'lucide-react';
+import { Plus, Trash2, IdCard } from 'lucide-react';
 import { useCurrentWedding } from '@/features/weddings/WeddingProvider';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -41,12 +41,20 @@ function CoreDetailsForm({ weddingId, canEdit }: { weddingId: string; canEdit: b
   });
 
   const onSubmit = async (values: WeddingInfoInput) => {
+    // Postgres `date` columns reject '' (only accept a real date or null) —
+    // an empty HTML date input sends '' when cleared, so normalize here.
+    const payload: WeddingInfoInput = {
+      ...values,
+      wedding_date: values.wedding_date || null,
+      reception_date: values.reception_date || null,
+    };
     try {
-      await updateWeddingInfo.mutateAsync(values);
+      await updateWeddingInfo.mutateAsync(payload);
       toast.success('Wedding info updated.');
-      reset(values);
+      reset(payload);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not update wedding info.');
+      const message = err instanceof Error ? err.message : 'Could not update wedding info.';
+      toast.error(message);
     }
   };
 
@@ -268,7 +276,7 @@ export function WeddingInfoPage() {
   return (
     <div className="space-y-4 p-4 pt-6 pb-6">
       <div className="mb-2 flex items-center gap-2">
-        <Info className="h-5 w-5 text-primary" />
+        <IdCard className="h-5 w-5 text-primary" />
         <h1 className="text-lg font-semibold text-text">Wedding Information</h1>
       </div>
       <CoreDetailsForm weddingId={wedding.id} canEdit={canEditCore} />

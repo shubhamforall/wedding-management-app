@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Check, ChevronDown, Heart, LogOut, Plus, Search } from 'lucide-react';
+import { Check, ChevronDown, Heart, LogOut, Plus, Search, X } from 'lucide-react';
 import { sidebarNavGroups } from '@/app/navigation';
 import { cn } from '@/lib/cn';
 import { Avatar } from '@/components/ui/Avatar';
@@ -10,7 +10,12 @@ import { useMyWeddings } from '@/features/weddings/hooks';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { signOut } from '@/features/auth/api';
 
-export function Sidebar() {
+interface SidebarProps {
+  mobileOpen: boolean;
+  onMobileClose: () => void;
+}
+
+export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const { wedding, role } = useCurrentWedding();
   const { user } = useAuth();
   const { data: weddings } = useMyWeddings();
@@ -27,6 +32,7 @@ export function Sidebar() {
     const q = searchValue.trim();
     if (!q) return;
     navigate(`/w/${wedding.id}/search?q=${encodeURIComponent(q)}`);
+    onMobileClose();
   }
 
   useEffect(() => {
@@ -53,8 +59,23 @@ export function Sidebar() {
     };
   }, [isSwitcherOpen]);
 
+  // Lock body scroll while the mobile drawer is open, and let Escape close it.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    document.body.style.overflow = 'hidden';
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') onMobileClose();
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [mobileOpen, onMobileClose]);
+
   function switchWedding(weddingId: string) {
     setIsSwitcherOpen(false);
+    onMobileClose();
 
     if (weddingId === wedding.id) return;
 
@@ -62,8 +83,8 @@ export function Sidebar() {
     navigate(`${nextPath}${location.search}${location.hash}`);
   }
 
-  return (
-    <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-border bg-bg-raised p-4 md:flex">
+  const content = (
+    <>
       <div ref={switcherRef} className="relative mb-6">
         <button
           type="button"
@@ -119,6 +140,7 @@ export function Sidebar() {
               className="flex w-full items-center gap-2 border-t border-border px-3 py-2 text-sm font-medium text-text-muted transition-colors hover:bg-bg-subtle hover:text-text"
               onClick={() => {
                 setIsSwitcherOpen(false);
+                onMobileClose();
                 navigate('/weddings/new');
               }}
             >
@@ -154,6 +176,7 @@ export function Sidebar() {
                 key={item.path}
                 to={item.path}
                 end={item.path === ''}
+                onClick={onMobileClose}
                 className={({ isActive }) =>
                   cn(
                     'flex items-center gap-3 rounded-[var(--radius-sm)] px-3 py-2 text-sm font-medium transition-colors',
@@ -186,6 +209,35 @@ export function Sidebar() {
           </button>
         </div>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop: always-visible fixed rail */}
+      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-border bg-bg-raised p-4 md:flex">
+        {content}
+      </aside>
+
+      {/* Mobile: slide-in drawer, opened via the hamburger in AppShell's TopBar */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <button aria-label="Close menu" className="absolute inset-0 bg-black/50" onClick={onMobileClose} />
+          <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-border bg-bg-raised p-4 shadow-xl">
+            <div className="mb-2 flex justify-end">
+              <button
+                type="button"
+                aria-label="Close menu"
+                onClick={onMobileClose}
+                className="flex h-8 w-8 items-center justify-center rounded-full text-text-muted hover:bg-bg-subtle hover:text-text"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            {content}
+          </aside>
+        </div>
+      )}
+    </>
   );
 }
