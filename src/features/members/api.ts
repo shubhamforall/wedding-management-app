@@ -29,14 +29,20 @@ export async function fetchPendingInvitations(weddingId: string): Promise<Invita
   return data ?? [];
 }
 
-export async function inviteMember(weddingId: string, email: string, role: WeddingRole) {
+export async function inviteMember(weddingId: string, weddingName: string, email: string, role: WeddingRole) {
   const { data: userRes, error: userError } = await supabase.auth.getUser();
   if (userError) throw userError;
   if (!userRes.user) throw new Error('Not signed in.');
 
   const { data, error } = await supabase
     .from('wedding_invitations')
-    .insert({ wedding_id: weddingId, email: email.trim().toLowerCase(), role, invited_by: userRes.user.id })
+    .insert({
+      wedding_id: weddingId,
+      wedding_name: weddingName,
+      email: email.trim().toLowerCase(),
+      role,
+      invited_by: userRes.user.id,
+    })
     .select('id, wedding_id, email, role, status, token, expires_at, created_at')
     .single()
     .returns<InvitationRow>();

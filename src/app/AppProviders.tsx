@@ -10,6 +10,15 @@ const queryClient = new QueryClient({
       staleTime: 30_000,
       retry: 1,
       refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      // Default 'online' mode pauses/resumes retries off navigator.onLine,
+      // which flaps on some flaky WiFi adapters even while fetches are
+      // actually succeeding — each flap re-fires the query from scratch.
+      // 'always' skips that pause/continue dance entirely.
+      networkMode: 'always',
+    },
+    mutations: {
+      networkMode: 'always',
     },
   },
 });

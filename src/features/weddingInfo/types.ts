@@ -29,6 +29,7 @@ export interface ImportantNumberInput {
 }
 
 export interface WeddingInfoInput {
+  name: string;
   bride_name: string;
   groom_name: string;
   wedding_date: string | null;

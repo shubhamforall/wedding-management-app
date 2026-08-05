@@ -175,7 +175,7 @@ export function MembersPage() {
         </div>
       )}
 
-      <InviteMemberDialog weddingId={wedding.id} open={inviteOpen} onClose={() => setInviteOpen(false)} />
+      <InviteMemberDialog weddingId={wedding.id} weddingName={wedding.name} open={inviteOpen} onClose={() => setInviteOpen(false)} />
 
       {me && (
         <TransferOwnershipDialog

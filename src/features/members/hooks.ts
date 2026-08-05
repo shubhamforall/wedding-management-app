@@ -16,10 +16,11 @@ export function usePendingInvitations(weddingId: string) {
   });
 }
 
-export function useInviteMember(weddingId: string) {
+export function useInviteMember(weddingId: string, weddingName: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ email, role }: { email: string; role: WeddingRole }) => api.inviteMember(weddingId, email, role),
+    mutationFn: ({ email, role }: { email: string; role: WeddingRole }) =>
+      api.inviteMember(weddingId, weddingName, email, role),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: invitationsQueryKey(weddingId) }),
   });
 }

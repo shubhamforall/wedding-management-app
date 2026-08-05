@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, IdCard } from 'lucide-react';
+import { Plus, Trash2, IdCard, TriangleAlert } from 'lucide-react';
 import { useCurrentWedding } from '@/features/weddings/WeddingProvider';
+import { useDeleteWedding } from '@/features/weddings/hooks';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
@@ -31,6 +33,7 @@ function CoreDetailsForm({ weddingId, canEdit }: { weddingId: string; canEdit: b
     formState: { isDirty },
   } = useForm<WeddingInfoInput>({
     defaultValues: {
+      name: wedding.name,
       bride_name: wedding.bride_name,
       groom_name: wedding.groom_name,
       wedding_date: wedding.wedding_date ?? '',
@@ -62,6 +65,7 @@ function CoreDetailsForm({ weddingId, canEdit }: { weddingId: string; canEdit: b
     <Card className="p-4">
       <h2 className="mb-3 text-sm font-semibold text-text">Core Details</h2>
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+        <Input label="Wedding Name" disabled={!canEdit} {...register('name', { required: true })} />
         <div className="grid grid-cols-2 gap-4">
           <Input label="Bride Name" disabled={!canEdit} {...register('bride_name', { required: true })} />
           <Input label="Groom Name" disabled={!canEdit} {...register('groom_name', { required: true })} />
@@ -268,6 +272,75 @@ function ImportantNumbersSection({ weddingId, canEdit }: { weddingId: string; ca
   );
 }
 
+function DangerZone({ weddingId, weddingName }: { weddingId: string; weddingName: string }) {
+  const navigate = useNavigate();
+  const deleteWedding = useDeleteWedding();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+
+  const close = () => {
+    setConfirmOpen(false);
+    setConfirmText('');
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteWedding.mutateAsync(weddingId);
+      toast.success('Wedding deleted.');
+      navigate('/', { replace: true });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not delete wedding.');
+    }
+  };
+
+  return (
+    <Card className="border-danger/30 p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <TriangleAlert className="h-4 w-4 text-danger" />
+        <h2 className="text-sm font-semibold text-danger">Danger Zone</h2>
+      </div>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium text-text">Delete this wedding</p>
+          <p className="text-xs text-text-muted">
+            Permanently removes every guest, expense, vendor, task, and document. This can&apos;t be undone.
+          </p>
+        </div>
+        <Button variant="danger" size="sm" onClick={() => setConfirmOpen(true)} className="shrink-0">
+          Delete Wedding
+        </Button>
+      </div>
+
+      <Dialog open={confirmOpen} onClose={close} title="Delete this wedding?">
+        <div className="space-y-4">
+          <p className="text-sm text-text-muted">
+            This permanently deletes <strong className="text-text">{weddingName}</strong> and everything in it —
+            guests, budget, expenses, vendors, tasks, documents, all of it. There is no undo.
+          </p>
+          <p className="text-sm text-text-muted">
+            Type <strong className="text-text">{weddingName}</strong> to confirm.
+          </p>
+          <Input value={confirmText} onChange={(e) => setConfirmText(e.target.value)} autoFocus />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="secondary" onClick={close}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              disabled={confirmText !== weddingName}
+              isLoading={deleteWedding.isPending}
+              onClick={handleDelete}
+            >
+              Delete Wedding
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+    </Card>
+  );
+}
+
 export function WeddingInfoPage() {
   const { wedding, role } = useCurrentWedding();
   const canEditCore = role === 'owner';
@@ -282,6 +355,7 @@ export function WeddingInfoPage() {
       <CoreDetailsForm weddingId={wedding.id} canEdit={canEditCore} />
       <EmergencyContactsSection weddingId={wedding.id} canEdit={canEditLists} />
       <ImportantNumbersSection weddingId={wedding.id} canEdit={canEditLists} />
+      {role === 'owner' && <DangerZone weddingId={wedding.id} weddingName={wedding.name} />}
     </div>
   );
 }

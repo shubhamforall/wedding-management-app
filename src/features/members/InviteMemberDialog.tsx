@@ -14,14 +14,16 @@ interface FormValues {
 
 export function InviteMemberDialog({
   weddingId,
+  weddingName,
   open,
   onClose,
 }: {
   weddingId: string;
+  weddingName: string;
   open: boolean;
   onClose: () => void;
 }) {
-  const inviteMember = useInviteMember(weddingId);
+  const inviteMember = useInviteMember(weddingId, weddingName);
   const {
     register,
     handleSubmit,

@@ -1,9 +1,8 @@
 import { createContext, use, useMemo, type ReactNode } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
 import { FullPageSpinner } from '@/components/ui/Spinner';
 import type { Wedding, WeddingRole } from '@/types/database';
+import { useMyWeddings } from './hooks';
 
 interface CurrentWeddingContextValue {
   wedding: Wedding;
@@ -12,41 +11,20 @@ interface CurrentWeddingContextValue {
 
 const CurrentWeddingContext = createContext<CurrentWeddingContextValue | null>(null);
 
-interface MembershipRow {
-  role: WeddingRole;
-  weddings: Wedding | null;
-}
-
-async function fetchWeddingWithRole(weddingId: string) {
-  const { data: membership, error: membershipError } = await supabase
-    .from('wedding_members')
-    .select('role, weddings(*)')
-    .eq('wedding_id', weddingId)
-    .eq('status', 'active')
-    .maybeSingle()
-    .returns<MembershipRow>();
-
-  if (membershipError) throw membershipError;
-  if (!membership || !membership.weddings) return null;
-
-  return {
-    wedding: membership.weddings,
-    role: membership.role,
-  };
-}
-
 export function WeddingProvider({ children }: { children: ReactNode }) {
   const { weddingId } = useParams<{ weddingId: string }>();
+  const { data: weddings, error, isPending } = useMyWeddings();
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['wedding', weddingId],
-    queryFn: () => fetchWeddingWithRole(weddingId!),
-    enabled: !!weddingId,
-  });
+  const value = useMemo(() => {
+    const wedding = weddings?.find((item) => item.id === weddingId);
+    return wedding ? { wedding, role: wedding.role } : null;
+  }, [weddingId, weddings]);
 
-  const value = useMemo(() => (data ? { wedding: data.wedding, role: data.role } : null), [data]);
+  if (!weddingId || isPending) return <FullPageSpinner />;
 
-  if (isLoading) return <FullPageSpinner />;
+  if (error) {
+    throw error;
+  }
 
   if (!value) {
     return <Navigate to="/" replace />;

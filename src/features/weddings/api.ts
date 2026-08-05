@@ -48,3 +48,35 @@ export async function createWedding(input: CreateWeddingInput): Promise<Wedding>
   if (!data) throw new Error('Wedding creation returned no data.');
   return data as Wedding;
 }
+
+export async function deleteWedding(weddingId: string) {
+  const { error } = await supabase.from('weddings').delete().eq('id', weddingId);
+  if (error) throw error;
+}
+
+export interface MyPendingInvitation {
+  id: string;
+  wedding_id: string;
+  wedding_name: string | null;
+  role: WeddingRole;
+  token: string;
+  expires_at: string;
+}
+
+// Relies entirely on RLS ("invitees can view own pending invite": email =
+// their JWT email, status = 'pending') to scope this to the signed-in
+// user — no email filter needed client-side. Can't join to `weddings` for
+// the name since the invitee isn't a member yet and that table's RLS would
+// block it; wedding_name is denormalized onto the invitation row instead
+// (see migration 0012) specifically so this query doesn't need that join.
+export async function fetchMyPendingInvitations(): Promise<MyPendingInvitation[]> {
+  const { data, error } = await supabase
+    .from('wedding_invitations')
+    .select('id, wedding_id, wedding_name, role, token, expires_at')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+    .returns<MyPendingInvitation[]>();
+
+  if (error) throw error;
+  return data ?? [];
+}
