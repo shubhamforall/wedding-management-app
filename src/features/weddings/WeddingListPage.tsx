@@ -65,9 +65,11 @@ export function WeddingListPage() {
       <div className="flex flex-1 items-center justify-center px-4 pb-16">
         <div className="w-full max-w-sm space-y-6">
           <div className="flex flex-col items-center gap-2 text-center">
-            <div className="flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] bg-primary text-primary-fg">
-              {hasPendingInvites ? <Mail className="h-5 w-5" /> : <Heart className="h-5 w-5" fill="currentColor" />}
-            </div>
+            {hasPendingInvites && (
+              <div className="flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] bg-primary text-primary-fg">
+                <Mail className="h-5 w-5" />
+              </div>
+            )}
             <h1 className="text-xl font-semibold text-text">
               {hasPendingInvites ? "You've been invited!" : 'No weddings yet'}
             </h1>
