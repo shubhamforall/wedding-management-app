@@ -11,6 +11,7 @@ import { DataTable } from '@/components/ui/DataTable';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { FullPageSpinner } from '@/components/ui/Spinner';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { ConfigureListsButton } from '@/features/settings/ConfigureListsButton';
 import { TimelineFormDialog } from './TimelineFormDialog';
 import { useDeleteTimelineEvent, useTimelineEvents } from './hooks';
 import type { TimelineEvent } from './types';
@@ -104,12 +105,22 @@ export function TimelinePage() {
           <h1 className="text-lg font-semibold text-text">Timeline</h1>
           <p className="text-sm text-text-muted">{events?.length ?? 0} events</p>
         </div>
-        {canEdit && (
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="h-4 w-4" />
-            Add Event
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <ConfigureListsButton
+            weddingId={wedding.id}
+            role={role}
+            lists={[
+              { listType: 'timeline_event', label: 'Timeline Event' },
+              { listType: 'timeline_status', label: 'Timeline Status' },
+            ]}
+          />
+          {canEdit && (
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="h-4 w-4" />
+              Add Event
+            </Button>
+          )}
+        </div>
       </div>
 
       {!events || events.length === 0 ? (

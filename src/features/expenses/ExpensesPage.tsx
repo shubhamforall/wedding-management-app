@@ -13,6 +13,7 @@ import { DataTable } from '@/components/ui/DataTable';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { FullPageSpinner } from '@/components/ui/Spinner';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { ConfigureListsButton } from '@/features/settings/ConfigureListsButton';
 import { formatCurrency } from '@/lib/format';
 import { ExpenseFormDialog } from './ExpenseFormDialog';
 import { useDeleteExpense, useExpenses, useVendorOptions } from './hooks';
@@ -122,12 +123,23 @@ export function ExpensesPage() {
           <h1 className="text-lg font-semibold text-text">Expenses</h1>
           <p className="text-sm text-text-muted">{expenses?.length ?? 0} entries</p>
         </div>
-        {canEdit && (
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="h-4 w-4" />
-            Add Expense
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <ConfigureListsButton
+            weddingId={wedding.id}
+            role={role}
+            lists={[
+              { listType: 'budget_category', label: 'Budget Categories' },
+              { listType: 'payment_mode', label: 'Payment Mode' },
+              { listType: 'expense_status', label: 'Expense Status' },
+            ]}
+          />
+          {canEdit && (
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="h-4 w-4" />
+              Add Expense
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">

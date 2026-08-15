@@ -13,6 +13,7 @@ import { DataTable } from '@/components/ui/DataTable';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { FullPageSpinner } from '@/components/ui/Spinner';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { ConfigureListsButton } from '@/features/settings/ConfigureListsButton';
 import { GuestFormDialog } from './GuestFormDialog';
 import { useDeleteGuest, useGuests } from './hooks';
 import type { Guest } from './types';
@@ -129,12 +130,22 @@ export function GuestsPage() {
           <h1 className="text-lg font-semibold text-text">Guests</h1>
           <p className="text-sm text-text-muted">{guests?.length ?? 0} families</p>
         </div>
-        {canEdit && (
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="h-4 w-4" />
-            Add Family
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <ConfigureListsButton
+            weddingId={wedding.id}
+            role={role}
+            lists={[
+              { listType: 'invitation_status', label: 'Invitation Status' },
+              { listType: 'family_members', label: 'Family Members' },
+            ]}
+          />
+          {canEdit && (
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="h-4 w-4" />
+              Add Family
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">

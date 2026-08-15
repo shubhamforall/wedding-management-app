@@ -13,6 +13,7 @@ import { DataTable } from '@/components/ui/DataTable';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { FullPageSpinner } from '@/components/ui/Spinner';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { ConfigureListsButton } from '@/features/settings/ConfigureListsButton';
 import { cn } from '@/lib/cn';
 import { InventoryFormDialog } from './InventoryFormDialog';
 import { useDeleteInventoryItem, useInventoryItems } from './hooks';
@@ -109,12 +110,15 @@ export function InventoryPage() {
             {items?.length ?? 0} items{shortItemsCount > 0 && <span className="text-danger"> · {shortItemsCount} short</span>}
           </p>
         </div>
-        {canEdit && (
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="h-4 w-4" />
-            Add Item
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <ConfigureListsButton weddingId={wedding.id} role={role} lists={[{ listType: 'inventory_status', label: 'Inventory Status' }]} />
+          {canEdit && (
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="h-4 w-4" />
+              Add Item
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">

@@ -13,6 +13,7 @@ import { DataTable } from '@/components/ui/DataTable';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { FullPageSpinner } from '@/components/ui/Spinner';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { ConfigureListsButton } from '@/features/settings/ConfigureListsButton';
 import { DocumentFormDialog } from './DocumentFormDialog';
 import { getDownloadUrl } from './api';
 import { useDeleteDocument, useDocuments } from './hooks';
@@ -107,12 +108,15 @@ export function DocumentsPage() {
           <h1 className="text-lg font-semibold text-text">Documents</h1>
           <p className="text-sm text-text-muted">{documents?.length ?? 0} files</p>
         </div>
-        {canEdit && (
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="h-4 w-4" />
-            Upload
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <ConfigureListsButton weddingId={wedding.id} role={role} lists={[{ listType: 'document_category', label: 'Document Category' }]} />
+          {canEdit && (
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="h-4 w-4" />
+              Upload
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">

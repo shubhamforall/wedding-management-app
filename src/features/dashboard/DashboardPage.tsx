@@ -113,11 +113,10 @@ export function DashboardPage() {
       <Card className="overflow-hidden p-0">
         <div className="flex flex-col gap-5 bg-linear-to-br from-primary/10 via-transparent to-transparent p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-linear-to-br from-[#fb6f5c] via-primary to-[#2e1065] shadow-lg shadow-primary/20">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(255,255,255,0.35),transparent_32%)]" />
-              <span className="relative text-lg font-semibold tracking-normal text-white">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-fg">
+              <span className="text-lg font-semibold">
                 {getInitial(wedding.bride_name)}
-                <span className="text-white/60">&amp;</span>
+                <span className="opacity-60">&amp;</span>
                 {getInitial(wedding.groom_name)}
               </span>
             </div>

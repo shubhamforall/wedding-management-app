@@ -155,13 +155,12 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
         />
       </div>
 
-      <nav className="flex-1 space-y-4 overflow-y-auto">
+      <nav className="flex-1 space-y-0.5 overflow-y-auto">
         {sidebarNavGroups.map((group, groupIndex) => (
           <div key={group.label ?? `group-${groupIndex}`} className="space-y-0.5">
             {group.label && (
               <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-text-faint">{group.label}</p>
             )}
-            {groupIndex > 0 && !group.label && <div className="mx-3 mb-3 border-t border-border-subtle" />}
             {group.items.map((item) => (
               <NavLink
                 key={item.path}

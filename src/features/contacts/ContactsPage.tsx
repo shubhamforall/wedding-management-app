@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { FullPageSpinner } from '@/components/ui/Spinner';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { ConfigureListsButton } from '@/features/settings/ConfigureListsButton';
 import { ContactFormDialog } from './ContactFormDialog';
 import { useDeleteManualContact, useFamilyEmergencyContacts, useManualContacts, useVendorContacts } from './hooks';
 import type { ContactRow } from './types';
@@ -104,12 +105,15 @@ export function ContactsPage() {
           <h1 className="text-lg font-semibold text-text">Contacts</h1>
           <p className="text-sm text-text-muted">{totalCount} contacts</p>
         </div>
-        {canEdit && (
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="h-4 w-4" />
-            Add Contact
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <ConfigureListsButton weddingId={wedding.id} role={role} lists={[{ listType: 'contact_type', label: 'Contact Type' }]} />
+          {canEdit && (
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="h-4 w-4" />
+              Add Contact
+            </Button>
+          )}
+        </div>
       </div>
 
       <Input placeholder="Search name, phone, type..." value={search} onChange={(e) => setSearch(e.target.value)} className="mb-4" />

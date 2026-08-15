@@ -14,6 +14,7 @@ import { DataTable } from '@/components/ui/DataTable';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { FullPageSpinner } from '@/components/ui/Spinner';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { ConfigureListsButton } from '@/features/settings/ConfigureListsButton';
 import { cn } from '@/lib/cn';
 import { TaskFormDialog } from './TaskFormDialog';
 import { useDeleteTask, useTasks } from './hooks';
@@ -145,12 +146,23 @@ export function TasksPage() {
           <h1 className="text-lg font-semibold text-text">Tasks</h1>
           <p className="text-sm text-text-muted">{tasks?.length ?? 0} tasks</p>
         </div>
-        {canEdit && (
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="h-4 w-4" />
-            Add Task
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <ConfigureListsButton
+            weddingId={wedding.id}
+            role={role}
+            lists={[
+              { listType: 'task_category', label: 'Task Category' },
+              { listType: 'task_priority', label: 'Task Priority' },
+              { listType: 'task_status', label: 'Task Status' },
+            ]}
+          />
+          {canEdit && (
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="h-4 w-4" />
+              Add Task
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">

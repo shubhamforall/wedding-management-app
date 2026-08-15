@@ -11,7 +11,6 @@ import {
   Contact,
   FolderOpen,
   UserCog,
-  Settings,
   Search,
   IdCard,
   Bell,
@@ -43,7 +42,6 @@ const secondaryNav: NavItem[] = [
   { label: 'Members', path: 'members', icon: UserCog },
   { label: 'Search', path: 'search', icon: Search },
   { label: 'Notifications', path: 'notifications', icon: Bell },
-  { label: 'Settings', path: 'settings', icon: Settings },
 ];
 
 export interface NavGroup {
@@ -88,5 +86,8 @@ export const sidebarNavGroups: NavGroup[] = [
   },
 ];
 
-// Consumed by AccountPanel.tsx — the three items moved out of the sidebar.
-export const accountPanelNav: NavItem[] = [byLabel('Wedding Info'), byLabel('Members'), byLabel('Settings')];
+// Consumed by AccountPanel.tsx — the items moved out of the sidebar.
+// Settings is gone entirely — replaced by a per-page "Configure" button
+// (ConfigureListsButton) on each module that actually uses dropdown
+// values, rather than one hub disconnected from where those values apply.
+export const accountPanelNav: NavItem[] = [byLabel('Wedding Info'), byLabel('Members')];

@@ -13,6 +13,7 @@ import { DataTable } from '@/components/ui/DataTable';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { FullPageSpinner } from '@/components/ui/Spinner';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { ConfigureListsButton } from '@/features/settings/ConfigureListsButton';
 import { formatCurrency } from '@/lib/format';
 import { VendorFormDialog } from './VendorFormDialog';
 import { useDeleteVendor, useVendors } from './hooks';
@@ -110,12 +111,15 @@ export function VendorsPage() {
           <h1 className="text-lg font-semibold text-text">Vendors</h1>
           <p className="text-sm text-text-muted">{vendors?.length ?? 0} vendors</p>
         </div>
-        {canEdit && (
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="h-4 w-4" />
-            Add Vendor
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <ConfigureListsButton weddingId={wedding.id} role={role} lists={[{ listType: 'vendor_category', label: 'Vendor Categories' }]} />
+          {canEdit && (
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="h-4 w-4" />
+              Add Vendor
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
