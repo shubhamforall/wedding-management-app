@@ -7,10 +7,15 @@ const REFRESH_COOKIE = 'refresh_token';
 const ONE_HOUR_MS = 60 * 60 * 1000;
 const THIRTY_DAYS_MS = 30 * 24 * ONE_HOUR_MS;
 
+// Frontend and backend are deployed as two separate Hostinger apps (two
+// different origins), so cross-origin cookies need SameSite=None — which
+// browsers only honor when Secure is also set, i.e. only over HTTPS. Local
+// dev (COOKIE_SECURE=false, plain http://localhost) falls back to Lax,
+// which is what actually works there.
 const baseCookieOptions = {
   httpOnly: true,
   secure: env.cookieSecure,
-  sameSite: 'lax' as const,
+  sameSite: (env.cookieSecure ? 'none' : 'lax') as 'none' | 'lax',
   path: '/',
 };
 
