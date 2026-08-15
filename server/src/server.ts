@@ -1,8 +1,21 @@
 import { createApp } from './app';
 import { env } from './config/env';
+import { runMigrations } from './config/migrate';
 import { isSmtpConfigured, verifySmtpConnection } from './services/email/smtp.service';
 
 async function start() {
+  // Run any pending migrations before accepting traffic — Hostinger's
+  // deploy flow has no separate migration hook (see migrate.ts), so this
+  // is what keeps the schema in sync automatically on every deploy instead
+  // of requiring a manual SSH step each time. If this fails, the app must
+  // not start against a schema it can't trust.
+  try {
+    await runMigrations();
+  } catch (err) {
+    console.error('[startup] Migrations failed:', err instanceof Error ? err.message : err);
+    process.exit(1);
+  }
+
   // Email is required in production (invitations/password-reset depend on
   // it), but a missing/broken SMTP setup shouldn't block local dev from
   // running everything else — see MIGRATION_ANALYSIS.md / SMTP setup docs.

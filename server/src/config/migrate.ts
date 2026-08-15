@@ -19,7 +19,13 @@ async function getAppliedMigrations(conn: mysql.Connection): Promise<Set<string>
   return new Set(rows.map((r) => r.id as string));
 }
 
-async function run() {
+// Exported so server.ts can run pending migrations automatically on boot —
+// Hostinger's deploy lifecycle is just "npm install, then run the entry
+// file" with no hook for a separate migration step, so the alternative
+// would be manually SSHing in after every deploy that adds a migration.
+// Safe to call on every startup: schema_migrations tracks what's already
+// applied, so this is a no-op once the schema is current.
+export async function runMigrations(): Promise<void> {
   const files = fs
     .readdirSync(MIGRATIONS_DIR)
     .filter((f) => f.endsWith('.sql'))
@@ -46,22 +52,26 @@ async function run() {
 
     for (const file of files) {
       if (applied.has(file)) {
-        console.log(`skip  ${file} (already applied)`);
+        console.log(`[migrate] skip  ${file} (already applied)`);
         continue;
       }
       const sql = fs.readFileSync(path.join(MIGRATIONS_DIR, file), 'utf8');
-      console.log(`apply ${file}`);
+      console.log(`[migrate] apply ${file}`);
       await conn.query(sql);
       await conn.query('INSERT INTO schema_migrations (id) VALUES (?)', [file]);
     }
 
-    console.log('Migrations up to date.');
+    console.log('[migrate] Schema up to date.');
   } finally {
     await conn.end();
   }
 }
 
-run().catch((err) => {
-  console.error('Migration failed:', err);
-  process.exit(1);
-});
+// CLI entry point (`npm run migrate`) — still works standalone for local
+// dev / manual runs, on top of the automatic call from server.ts.
+if (require.main === module) {
+  runMigrations().catch((err) => {
+    console.error('Migration failed:', err);
+    process.exit(1);
+  });
+}
