@@ -1,13 +1,12 @@
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { useState } from 'react';
-import { MailCheck } from 'lucide-react';
 import { AuthLayout } from './AuthLayout';
 import { signInWithGoogle, signUpWithEmail } from './api';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { consumePendingInviteToken } from '@/lib/pendingInvite';
+import { useAuth } from './AuthProvider';
 
 interface FormValues {
   fullName: string;
@@ -17,7 +16,7 @@ interface FormValues {
 
 export function SignupPage() {
   const navigate = useNavigate();
-  const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
+  const { refreshAuth } = useAuth();
   const {
     register,
     handleSubmit,
@@ -26,33 +25,14 @@ export function SignupPage() {
 
   const onSubmit = async (values: FormValues) => {
     try {
-      const { session } = await signUpWithEmail(values.email, values.password, values.fullName);
-      if (session) {
-        // Email confirmation is disabled on this project — signUp already
-        // returned an active session, no verification email is coming.
-        const pendingInviteToken = consumePendingInviteToken();
-        navigate(pendingInviteToken ? `/invite/${pendingInviteToken}` : '/', { replace: true });
-        return;
-      }
-      setSubmittedEmail(values.email);
+      await signUpWithEmail(values.email, values.password, values.fullName);
+      await refreshAuth();
+      const pendingInviteToken = consumePendingInviteToken();
+      navigate(pendingInviteToken ? `/invite/${pendingInviteToken}` : '/', { replace: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Could not sign up.');
     }
   };
-
-  if (submittedEmail) {
-    return (
-      <AuthLayout title="Check your inbox">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <MailCheck className="h-10 w-10 text-primary" strokeWidth={1.5} />
-          <p className="text-sm text-text-muted">
-            We sent a verification link to <span className="font-medium text-text">{submittedEmail}</span>.
-            Confirm your email to finish creating your account.
-          </p>
-        </div>
-      </AuthLayout>
-    );
-  }
 
   return (
     <AuthLayout title="Create your account" subtitle="Start planning your wedding">

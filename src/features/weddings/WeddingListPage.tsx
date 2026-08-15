@@ -25,7 +25,7 @@ import { signOut } from '@/features/auth/api';
 export function WeddingListPage() {
   const { data: weddings, isLoading: weddingsLoading } = useMyWeddings();
   const { data: pendingInvitations, isLoading: invitesLoading } = useMyPendingInvitations();
-  const { user } = useAuth();
+  const { user, refreshAuth } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
@@ -56,7 +56,7 @@ export function WeddingListPage() {
         <p className="text-sm text-text-muted">{user?.email}</p>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Button variant="ghost" size="sm" onClick={() => signOut()}>
+          <Button variant="ghost" size="sm" onClick={() => signOut().then(refreshAuth)}>
             Sign out
           </Button>
         </div>

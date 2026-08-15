@@ -38,8 +38,12 @@ export function InviteMemberDialog({
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await inviteMember.mutateAsync(values);
-      toast.success(`Invitation sent to ${values.email}`);
+      const { emailSent } = await inviteMember.mutateAsync(values);
+      if (emailSent) {
+        toast.success(`Invitation sent to ${values.email}`);
+      } else {
+        toast.error(`Invitation created, but the email to ${values.email} could not be sent. Share the invite link from the Members list.`);
+      }
       close();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Could not send invitation.');

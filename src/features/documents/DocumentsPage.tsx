@@ -18,13 +18,8 @@ import { getDownloadUrl } from './api';
 import { useDeleteDocument, useDocuments } from './hooks';
 import type { DocumentRow } from './types';
 
-async function openDocument(storagePath: string) {
-  try {
-    const url = await getDownloadUrl(storagePath);
-    window.open(url, '_blank', 'noopener,noreferrer');
-  } catch (err) {
-    toast.error(err instanceof Error ? err.message : 'Could not open document.');
-  }
+function openDocument(weddingId: string, documentId: string) {
+  window.open(getDownloadUrl(weddingId, documentId), '_blank', 'noopener,noreferrer');
 }
 
 export function DocumentsPage() {
@@ -73,7 +68,7 @@ export function DocumentsPage() {
           <div className="flex justify-end gap-1">
             <button
               aria-label="Download document"
-              onClick={() => openDocument(row.original.storage_path)}
+              onClick={() => openDocument(wedding.id, row.original.id)}
               className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] text-text-muted hover:bg-bg-subtle hover:text-text"
             >
               <Download className="h-4 w-4" />
@@ -160,7 +155,7 @@ export function DocumentsPage() {
                   </div>
                   <button
                     aria-label="Download document"
-                    onClick={() => openDocument(doc.storage_path)}
+                    onClick={() => openDocument(wedding.id, doc.id)}
                     className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-primary hover:bg-primary/10"
                   >
                     <Download className="h-4 w-4" />

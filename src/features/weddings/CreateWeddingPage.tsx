@@ -61,7 +61,7 @@ export function CreateWeddingPage() {
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <Input
             label="Wedding Name"
-            placeholder="e.g. Shubham & Purva"
+            placeholder="e.g. Rahul & Priya"
             error={errors.name?.message}
             {...register('name', { required: 'Wedding name is required' })}
           />

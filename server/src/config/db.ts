@@ -1,0 +1,22 @@
+import mysql from 'mysql2/promise';
+import { env } from './env';
+
+export const pool = mysql.createPool({
+  host: env.db.host,
+  port: env.db.port,
+  database: env.db.database,
+  user: env.db.user,
+  password: env.db.password,
+  waitForConnections: true,
+  connectionLimit: 10,
+  dateStrings: true,
+});
+
+export async function pingDatabase(): Promise<void> {
+  const conn = await pool.getConnection();
+  try {
+    await conn.query('SELECT 1');
+  } finally {
+    conn.release();
+  }
+}

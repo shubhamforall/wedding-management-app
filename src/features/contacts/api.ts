@@ -1,24 +1,22 @@
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
+import { createCrudApi } from '@/lib/createCrudApi';
+import { toSnakeCaseArray } from '@/lib/caseMapping';
 import type { ContactRow, ManualContactInput } from './types';
 
 export async function fetchFamilyEmergencyContacts(weddingId: string): Promise<ContactRow[]> {
-  const [emergency, important] = await Promise.all([
-    supabase
-      .from('emergency_contacts')
-      .select('id, name, relation, phone, notes')
-      .eq('wedding_id', weddingId)
-      .returns<{ id: string; name: string; relation: string | null; phone: string | null; notes: string | null }[]>(),
-    supabase
-      .from('important_numbers')
-      .select('id, label, phone, notes')
-      .eq('wedding_id', weddingId)
-      .returns<{ id: string; label: string; phone: string | null; notes: string | null }[]>(),
+  const [emergencyRes, importantRes] = await Promise.all([
+    api.get<{ items: Record<string, unknown>[] }>(`/weddings/${weddingId}/emergency-contacts`),
+    api.get<{ items: Record<string, unknown>[] }>(`/weddings/${weddingId}/important-numbers`),
   ]);
 
-  if (emergency.error) throw emergency.error;
-  if (important.error) throw important.error;
+  const emergency = toSnakeCaseArray<{ id: string; name: string; relation: string | null; phone: string | null; notes: string | null }>(
+    emergencyRes.items
+  );
+  const important = toSnakeCaseArray<{ id: string; label: string; phone: string | null; notes: string | null }>(
+    importantRes.items
+  );
 
-  const emergencyRows: ContactRow[] = (emergency.data ?? []).map((c) => ({
+  const emergencyRows: ContactRow[] = emergency.map((c) => ({
     id: c.id,
     name: c.name,
     type: c.relation ? `Emergency (${c.relation})` : 'Emergency',
@@ -28,7 +26,7 @@ export async function fetchFamilyEmergencyContacts(weddingId: string): Promise<C
     source: 'emergency',
   }));
 
-  const importantRows: ContactRow[] = (important.data ?? []).map((n) => ({
+  const importantRows: ContactRow[] = important.map((n) => ({
     id: n.id,
     name: n.label,
     type: 'Important Number',
@@ -42,15 +40,17 @@ export async function fetchFamilyEmergencyContacts(weddingId: string): Promise<C
 }
 
 export async function fetchVendorContacts(weddingId: string): Promise<ContactRow[]> {
-  const { data, error } = await supabase
-    .from('vendors')
-    .select('id, name, category, phone, alternate_phone, notes')
-    .eq('wedding_id', weddingId)
-    .returns<{ id: string; name: string; category: string | null; phone: string | null; alternate_phone: string | null; notes: string | null }[]>();
+  const { items } = await api.get<{ items: Record<string, unknown>[] }>(`/weddings/${weddingId}/vendors`);
+  const vendors = toSnakeCaseArray<{
+    id: string;
+    name: string;
+    category: string | null;
+    phone: string | null;
+    alternate_phone: string | null;
+    notes: string | null;
+  }>(items);
 
-  if (error) throw error;
-
-  return (data ?? []).map((v) => ({
+  return vendors.map((v) => ({
     id: v.id,
     name: v.name,
     type: v.category ? `${v.category} Vendor` : 'Vendor',
@@ -61,29 +61,13 @@ export async function fetchVendorContacts(weddingId: string): Promise<ContactRow
   }));
 }
 
+const manualCrud = createCrudApi<ContactRow, ManualContactInput>('contacts');
+
 export async function fetchManualContacts(weddingId: string): Promise<ContactRow[]> {
-  const { data, error } = await supabase
-    .from('contacts')
-    .select('id, name, type, phone, alternate_phone, notes')
-    .eq('wedding_id', weddingId)
-    .eq('source', 'manual')
-    .returns<ContactRow[]>();
-
-  if (error) throw error;
-  return (data ?? []).map((c) => ({ ...c, source: 'manual' as const }));
+  const rows = await manualCrud.fetchAll(weddingId);
+  return rows.map((c) => ({ ...c, source: 'manual' as const }));
 }
 
-export async function createManualContact(weddingId: string, input: ManualContactInput) {
-  const { error } = await supabase.from('contacts').insert({ ...input, wedding_id: weddingId, source: 'manual' });
-  if (error) throw error;
-}
-
-export async function updateManualContact(id: string, input: ManualContactInput) {
-  const { error } = await supabase.from('contacts').update(input).eq('id', id);
-  if (error) throw error;
-}
-
-export async function deleteManualContact(id: string) {
-  const { error } = await supabase.from('contacts').delete().eq('id', id);
-  if (error) throw error;
-}
+export const createManualContact = manualCrud.create;
+export const updateManualContact = manualCrud.update;
+export const deleteManualContact = manualCrud.remove;

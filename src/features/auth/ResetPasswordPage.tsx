@@ -1,8 +1,8 @@
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { AuthLayout } from './AuthLayout';
-import { updatePassword } from './api';
+import { resetPassword } from './api';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 
@@ -13,6 +13,8 @@ interface FormValues {
 
 export function ResetPasswordPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
   const {
     register,
     handleSubmit,
@@ -21,8 +23,12 @@ export function ResetPasswordPage() {
   } = useForm<FormValues>();
 
   const onSubmit = async (values: FormValues) => {
+    if (!token) {
+      toast.error('This reset link is missing its token.');
+      return;
+    }
     try {
-      await updatePassword(values.password);
+      await resetPassword(token, values.password);
       toast.success('Password updated. You can now sign in.');
       navigate('/auth/login', { replace: true });
     } catch (err) {

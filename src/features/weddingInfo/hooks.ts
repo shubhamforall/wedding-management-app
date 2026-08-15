@@ -32,7 +32,8 @@ export function useCreateEmergencyContact(weddingId: string) {
 export function useUpdateEmergencyContact(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: EmergencyContactInput }) => api.updateEmergencyContact(id, input),
+    mutationFn: ({ id, input }: { id: string; input: EmergencyContactInput }) =>
+      api.updateEmergencyContact(weddingId, id, input),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: emergencyContactsKey(weddingId) }),
   });
 }
@@ -40,7 +41,7 @@ export function useUpdateEmergencyContact(weddingId: string) {
 export function useDeleteEmergencyContact(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.deleteEmergencyContact(id),
+    mutationFn: (id: string) => api.deleteEmergencyContact(weddingId, id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: emergencyContactsKey(weddingId) }),
   });
 }
@@ -56,7 +57,8 @@ export function useCreateImportantNumber(weddingId: string) {
 export function useUpdateImportantNumber(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: ImportantNumberInput }) => api.updateImportantNumber(id, input),
+    mutationFn: ({ id, input }: { id: string; input: ImportantNumberInput }) =>
+      api.updateImportantNumber(weddingId, id, input),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: importantNumbersKey(weddingId) }),
   });
 }
@@ -64,7 +66,7 @@ export function useUpdateImportantNumber(weddingId: string) {
 export function useDeleteImportantNumber(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.deleteImportantNumber(id),
+    mutationFn: (id: string) => api.deleteImportantNumber(weddingId, id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: importantNumbersKey(weddingId) }),
   });
 }

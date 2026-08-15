@@ -24,7 +24,8 @@ export function useCreateShoppingItem(weddingId: string) {
 export function useUpdateShoppingItem(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: ShoppingItemInput }) => api.updateShoppingItem(id, input),
+    mutationFn: ({ id, input }: { id: string; input: ShoppingItemInput }) =>
+      api.updateShoppingItem(weddingId, id, input),
     onSuccess: () => invalidate(queryClient, weddingId),
   });
 }
@@ -32,7 +33,7 @@ export function useUpdateShoppingItem(weddingId: string) {
 export function useDeleteShoppingItem(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.deleteShoppingItem(id),
+    mutationFn: (id: string) => api.deleteShoppingItem(weddingId, id),
     onSuccess: () => invalidate(queryClient, weddingId),
   });
 }

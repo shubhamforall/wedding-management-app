@@ -1,48 +1,45 @@
-import { supabase } from '@/lib/supabase';
-
-const redirectBase = window.location.origin;
+import { api, API_URL } from '@/lib/api';
+import type { AuthUser } from './types';
 
 export async function signUpWithEmail(email: string, password: string, fullName: string) {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { full_name: fullName },
-      emailRedirectTo: `${redirectBase}/auth/callback`,
-    },
-  });
-  if (error) throw error;
-  return data;
+  const { user } = await api.post<{ user: AuthUser }>('/auth/register', { email, password, fullName });
+  return user;
 }
 
 export async function signInWithEmail(email: string, password: string) {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw error;
-  return data;
+  const { user } = await api.post<{ user: AuthUser }>('/auth/login', { email, password });
+  return user;
 }
 
-export async function signInWithGoogle() {
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: `${redirectBase}/auth/callback` },
-  });
-  if (error) throw error;
-  return data;
+// A full browser navigation, not a fetch — OAuth requires the browser
+// itself to visit Google's consent screen and follow the redirect chain
+// back through our backend, which sets the session cookies before landing
+// on /auth/callback.
+export function signInWithGoogle(): void {
+  window.location.href = `${API_URL}/auth/google`;
 }
 
 export async function sendPasswordReset(email: string) {
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${redirectBase}/auth/reset-password`,
-  });
-  if (error) throw error;
+  await api.post('/auth/forgot-password', { email });
 }
 
-export async function updatePassword(newPassword: string) {
-  const { error } = await supabase.auth.updateUser({ password: newPassword });
-  if (error) throw error;
+export async function resetPassword(token: string, password: string) {
+  await api.post('/auth/reset-password', { token, password });
+}
+
+export async function verifyEmail(token: string) {
+  await api.post('/auth/verify-email', { token });
 }
 
 export async function signOut() {
-  const { error } = await supabase.auth.signOut();
-  if (error) throw error;
+  await api.post('/auth/logout');
+}
+
+export async function fetchCurrentUser(): Promise<AuthUser | null> {
+  try {
+    const { user } = await api.get<{ user: AuthUser }>('/auth/me');
+    return user;
+  } catch {
+    return null;
+  }
 }

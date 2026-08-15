@@ -17,10 +17,3 @@ export interface DashboardStats {
   inventory_short_items: number;
   stay_records: number;
 }
-
-export interface WeddingAnnouncement {
-  wedding_id: string;
-  message: string | null;
-  updated_by: string | null;
-  updated_at: string;
-}

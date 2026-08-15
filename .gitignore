@@ -26,6 +26,9 @@ dist-ssr
 # Supabase CLI local cache (machine-specific link state, not project config)
 supabase/.temp/
 
+# User-uploaded documents (local dev storage) — never committed
+server/uploads/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

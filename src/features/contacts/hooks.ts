@@ -27,7 +27,8 @@ export function useCreateManualContact(weddingId: string) {
 export function useUpdateManualContact(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: ManualContactInput }) => api.updateManualContact(id, input),
+    mutationFn: ({ id, input }: { id: string; input: ManualContactInput }) =>
+      api.updateManualContact(weddingId, id, input),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: manualContactsKey(weddingId) }),
   });
 }
@@ -35,7 +36,7 @@ export function useUpdateManualContact(weddingId: string) {
 export function useDeleteManualContact(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.deleteManualContact(id),
+    mutationFn: (id: string) => api.deleteManualContact(weddingId, id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: manualContactsKey(weddingId) }),
   });
 }

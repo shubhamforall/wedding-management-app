@@ -6,14 +6,24 @@ Written for whoever (human or AI) picks this up next. Read this before touching 
 
 A production-track multi-tenant SaaS wedding-planning app, replacing an Excel workbook (`Wedding_Management_Workbook.xlsx`, still in repo root). Built incrementally over 10 phases, all now complete.
 
-**Update**: a real Supabase project now exists and all 11 migrations (0001-0011) are applied — see "Live project" below. Signup/login/wedding-creation have been tested end-to-end for real. Everything past wedding-creation (guests, expenses, vendors, tasks, dashboard numbers, invite flow, second account) is still untested against real data as of this writing — pick up there.
+**Update**: a real Supabase project now exists, all 12 migrations (0001-0012) are applied, and the frontend is deployed live on Vercel — see "Live project" below. Signup/login/wedding-creation/invite-accept/mobile nav have all been tested end-to-end for real by the user. Guests, expenses, vendors, tasks, dashboard numbers are still less thoroughly exercised — pick up there if continuing the real-data test pass.
 
 ### Live project
 
 - Supabase project ref: `xniwyxobsfvifwdfrpwq`, region `ap-south-1` (Mumbai)
 - `.env` in repo root is filled in with real `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` — **do not commit this**, it's gitignored, but be aware it now holds live (if low-risk, anon-only) credentials
 - To run migrations against it again in future: `SUPABASE_ACCESS_TOKEN=<token> npx supabase db push --password '<db password>' --yes` (token from Supabase dashboard → Account → Access Tokens; db password was set at project creation)
-- **A local DNS quirk on this dev machine**: the default resolver (via the router) fails to resolve `*.supabase.co` — `curl`/`nslookup` need `--resolve host:443:<ip>` or an explicit DNS server (`nslookup host 1.1.1.1`) to work from this shell. The browser is unaffected (uses its own/secure DNS). Not a project issue, just this machine's network — if migrations/tests weirdly fail with `Could not resolve host`, this is why.
+- **A local DNS quirk on this dev machine**: the default resolver (via the router) fails to resolve `*.supabase.co` — `curl`/`nslookup` need `--resolve host:443:<ip>` or an explicit DNS server (`nslookup host 1.1.1.1`) to work from this shell. The browser is *usually* unaffected (uses its own/secure DNS) but has intermittently shown the same failure on this user's home WiFi specifically (works fine on mobile data) — not a project issue, just this machine's/network's DNS, flagged to the user, not fixable from code.
+- **Frontend is deployed on Vercel** (production URL: `https://wedding-management-app-flax.vercel.app`). Env vars (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) are set in the Vercel project settings, mirroring `.env`.
+- **Email sending is live** via the `send-invitation-email` edge function + Resend, confirmed delivering real invite emails.
+
+### Real-world bug found and fixed after deployment: TanStack Query infinite refetch loop
+
+Symptom: after accepting an invite (or on any `/w/:weddingId` page, for any user), the page would spin forever — `FullPageSpinner` never resolved, while Network tab showed the *same* query re-firing every ~1-2s indefinitely, each one succeeding (200 OK, correct data). No console errors. Root two-part cause:
+1. `WeddingProvider` ran its **own** `useQuery(['wedding', weddingId], fetchWeddingWithRole)`, a separate query from `useMyWeddings()` (which `Sidebar` and `WeddingListPage` already fetch) — a redundant query with its own lifecycle.
+2. TanStack Query's default `networkMode: 'online'` pauses/resumes retries based on `navigator.onLine`; on this user's flaky WiFi adapter that flag flaps even while the actual fetch succeeds, so retries kept restarting from scratch, amplifying the redundant-query problem into a highly visible loop.
+
+Fix: `WeddingProvider` (`src/features/weddings/WeddingProvider.tsx`) now derives the current wedding from the already-cached `useMyWeddings()` list (`weddings?.find(w => w.id === weddingId)`) instead of issuing its own query — no separate fetch, no separate lifecycle to desync. `AppProviders.tsx`'s QueryClient defaults also gained `networkMode: 'always'` (skip the online/offline pause dance entirely) and `refetchOnReconnect: false`, as defense in depth for the same class of flaky-network issue. **If a similar "spins forever, data's fine, no errors" bug shows up elsewhere, check for (a) two different query keys fetching overlapping data, and (b) `networkMode`/`refetchOnReconnect` interactions on unreliable networks first.**
 
 ### Bug found and fixed during first real test
 
@@ -60,7 +70,9 @@ If a future task says "add X field to module Y" and X was one of the dropped fie
 src/
   app/            router.tsx, AppProviders.tsx (QueryClient/Theme/Auth), navigation.ts (nav config)
   components/
-    layout/       AppShell, Sidebar (desktop), BottomNav (mobile), MorePage, NotFoundPage, RouteErrorBoundary
+    layout/       AppShell, Sidebar (desktop + mobile drawer, unified), NotFoundPage, RouteErrorBoundary
+                   (BottomNav and MorePage were deleted — replaced by a hamburger button that opens the same
+                   Sidebar as a slide-in drawer on mobile; see "Routing" below)
     ui/           all reusable primitives — Button, Input, Select, Textarea, Checkbox, Dialog, ConfirmDialog,
                    Card, Badge, Avatar, DataTable, StatCard, Meter, Skeleton, Spinner, EmptyState, ComingSoon, ThemeToggle
   features/       one dir per module, each with types.ts, api.ts (raw supabase calls), hooks.ts (TanStack Query wrappers),
@@ -98,21 +110,28 @@ supabase/
 9. **`0009_documents_storage.sql`**: private Storage bucket `documents`, RLS on `storage.objects` keyed by treating the first path segment (`${wedding_id}/...`) as the tenant boundary, same isolation model as every table.
 10. **`0010_notifications.sql`**: `notifications` table + RLS (`user_id = auth.uid()` only) + triggers: member-joined-via-invitation notifies active owners, role-change/removal notifies the affected user.
 11. **`0011_fix_weddings_select_policy.sql`**: bug fix, see "Bug found and fixed" above. Reactive fix, applied only to `weddings` — not audited elsewhere yet.
+12. **`0012_invitation_wedding_name.sql`**: adds `wedding_name` (denormalized text) to `wedding_invitations`, backfilled from `weddings.name`. Lets an invitee see which wedding they're being invited to *before* accepting, without needing a `weddings` join the invitee's RLS wouldn't yet permit. Feeds the "You've been invited!" pending-invitations screen on `WeddingListPage` (see "Invitation landing flow" below).
 
-**All 11 are applied** to the live project (`xniwyxobsfvifwdfrpwq`) as of this writing. For a fresh project, run `supabase db push` (or paste into SQL editor) 0001 through 0011 in order.
+**All 12 are applied** to the live project (`xniwyxobsfvifwdfrpwq`) as of this writing. For a fresh project, run `supabase db push` (or paste into SQL editor) 0001 through 0012 in order.
 
 ## Auth & multi-tenancy model
 
 - Supabase Auth: email/password + Google OAuth (client wired, **no Google provider configured in any real Supabase project yet**), magic-link-style email verification, password reset.
 - Every wedding-scoped table has `wedding_id`; every RLS policy goes through `is_wedding_member()`.
-- Invitation flow: owner invites by email+role → row in `wedding_invitations` (token = uuid) → best-effort call to the `send-invitation-email` edge function → invitee visits `/invite/:token` → `accept_invitation()` RPC validates email match + expiry + status → membership created. If the invitee isn't logged in, `RequireAuth` redirects to `/auth/login` with `state.from` preserved, and `LoginPage` now honors that redirect (this was a real bug fixed mid-project — check this still works if you touch auth).
+- Invitation flow: owner invites by email+role → row in `wedding_invitations` (token = uuid, `wedding_name` denormalized on it per 0012) → best-effort call to the `send-invitation-email` edge function → invitee visits `/invite/:token` → `accept_invitation()` RPC validates email match + expiry + status → membership created. If the invitee isn't logged in, `RequireAuth` redirects to `/auth/login` with `state.from` preserved, and `LoginPage` now honors that redirect.
+
+### Invitation landing flow (real bug found via live testing, now fixed properly)
+
+Original design only stored the invite token in `localStorage` (`src/lib/pendingInvite.ts`) and consumed it at the exact moment of login/signup/email-callback — this broke in practice: a user who signed up, verified email in a new tab/context, and later just logged in normally (not via the stored-token path) landed on the generic "No weddings yet" screen instead of their invited wedding, because nothing re-checked for the invite once the immediate post-auth moment had passed.
+
+Fixed with a second, path-independent mechanism: `fetchMyPendingInvitations()` (`src/features/weddings/api.ts`) queries `wedding_invitations` directly (RLS: `email = auth.jwt() email AND status = 'pending'`, no join needed since `wedding_name` is denormalized). `WeddingListPage` (the `/` route) checks this on every visit — if pending invites exist, they take priority over the normal "auto-redirect to most recent wedding" behavior and render a branded "You've been invited!" card list with Accept buttons, regardless of how the user got to `/`. The localStorage-token mechanism still exists and still works for the direct `/invite/:token` link flow (`InviteRoute` in `router.tsx`), but is no longer the *only* path to correctly landing an invitee — this query-based check is now the actual safety net.
 - Ownership transfer: promote-new-owner-then-demote-old-owner, in that order specifically, because the DB's last-owner guard trigger would reject the demote-first order.
 
 ## Routing
 
 `src/app/router.tsx` — every module route under `/w/:weddingId/*` is **code-split** via React Router's data-router `lazy` field (not manual `React.lazy`+`Suspense` per route — the router handles it natively). The three routes outside the wedding shell (`WeddingListPage`, `CreateWeddingPage`, `AcceptInvitePage`) use manual `React.lazy` + a small `*Gate` wrapper component since they don't go through the same route-tree pattern. `RouteErrorBoundary` (`errorElement`) wraps the `/w/:weddingId` subtree; top-level auth routes are NOT covered by an error boundary — acceptable gap, noted, not fixed.
 
-Bottom nav (mobile) + Sidebar (desktop) config lives in `src/app/navigation.ts` — `primaryNav` (5 items: Dashboard/Guests/Finance/Tasks/More) and `moreNav` (everything else, including the Notifications bell with an unread-count badge).
+Navigation was reworked from the original bottom-nav+"More" grid to a single unified `Sidebar` (`src/components/layout/Sidebar.tsx`) used on both desktop (always visible, `md:flex`) and mobile (hamburger button in `AppShell`'s `TopBar` opens it as a slide-in drawer with backdrop, body-scroll-lock, and Escape-to-close). Config lives in `src/app/navigation.ts` → `sidebarNavGroups`: an ungrouped top section (Dashboard/Members/Settings) and a "Wedding Planning" group below it (Wedding Info/Guests/Finance/Tasks/Shopping/Inventory/Vendors/Timeline/Stay Arrangement/Contacts/Documents). The old `BottomNav` and `MorePage` components are deleted — `MorePage` had a real bug (relative `Link`s resolved one route-level too deep since it was itself `Outlet`-rendered, causing "Page not found" on every link) that's now moot since it's gone. Notifications is a bell icon with unread-count badge in `AppShell`'s `TopBar`, not a sidebar link.
 
 ## What's genuinely untested vs. what's "build-clean"
 
@@ -124,16 +143,18 @@ Bottom nav (mobile) + Sidebar (desktop) config lives in `src/app/navigation.ts` 
 
 ## Concrete next steps, roughly in order
 
-1. **Create the real Supabase project.** Run all 10 migrations in order. Copy `.env.example` → `.env`, fill in `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`.
-2. **`supabase gen types typescript --project-id <id> > src/types/database-generated.ts`**, then swap `src/lib/supabase.ts` back to `createClient<Database>(...)`. This closes the biggest type-safety gap in the codebase.
-3. ~~Deploy the edge function~~ **Done.** `send-invitation-email` is deployed and confirmed sending real emails via Resend. Remaining: verify a domain in Resend when ready to invite people other than the account owner, and update `APP_URL` secret to the real Vercel URL post-deploy.
-4. **Configure Google OAuth** in the Supabase Auth dashboard if you want that login path live.
-5. **Walk the app as a real user, once, start to finish**: sign up → create wedding → invite a second account → accept invite → add a guest, an expense, a vendor, a task → confirm Dashboard numbers actually update → upload a document → check it downloads. Wedding creation and invitation-email delivery are now confirmed working; the rest of this list (guests/expenses/vendors/tasks/second-account-accept/dashboard-refresh/document-upload) is still unverified against real data.
-6. ~~Settings page is a stub~~ **Built.** `src/features/settings/` — full CRUD UI over `list_options` (all 16 workbook dropdown lists), role-gated (viewer read-only, member add/edit/reorder, owner-only delete matching the RLS). Live-wired: edits here show up immediately in every other module's dropdowns since they share the same `useListOptions` query key.
-7. **Sidebar was reorganized** (`src/app/navigation.ts` → `sidebarNavGroups`, `src/components/layout/Sidebar.tsx`): top group is workspace-level (Dashboard/Members/Settings), bottom group under a "Wedding Planning" label is all the data modules. Notifications was removed from the sidebar list (there's a bell icon with unread badge in `AppShell`'s top-right `TopActions` instead — `src/components/layout/AppShell.tsx`). Search was also removed as a sidebar nav link and replaced with an inline search box above the nav that navigates to `/w/:weddingId/search?q=...`; `SearchPage` reads that `q` param on mount and on subsequent navigations to the same route (via a `useEffect` on `searchParams`, since the route doesn't remount).
-7. **Bundle size / perf**: code-splitting is done (initial chunk ~256KB gzip ~80KB), but recharts still makes `BudgetPage`'s chunk ~377KB — acceptable since it's lazy and only loads when Budget is visited, not blocking.
-8. **No offline support, no PWA manifest** — "Offline Friendly" from the original brief was never addressed.
-9. **Global Search** is client-side-filter-over-already-fetched-data (reuses each module's existing "fetch all" hook, small per-wedding datasets by design). Fine at current scale; would need real server-side search (Postgres full-text or similar) if guest/expense counts ever got large — they won't, per-wedding datasets are inherently small (30-60 families, etc.).
+1. ~~Create the real Supabase project~~ **Done.** All 12 migrations applied to `xniwyxobsfvifwdfrpwq`.
+2. **`supabase gen types typescript --project-id <id> > src/types/database-generated.ts`**, then swap `src/lib/supabase.ts` back to `createClient<Database>(...)`. Still not done — remains the biggest type-safety gap in the codebase.
+3. ~~Deploy the edge function~~ **Done.** `send-invitation-email` is deployed and confirmed sending real emails via Resend (sandbox sender `onboarding@resend.dev`, so only deliverable to the Resend account's own email until a domain is verified — not done yet).
+4. **Configure Google OAuth** in the Supabase Auth dashboard if you want that login path live — still not configured.
+5. ~~Walk the app as a real user~~ **Mostly done.** Sign up, create wedding, invite a second (temp-mail) account, accept invite, mobile nav, wedding rename/delete have all been tested live and bugs found this way were fixed (see "Bug found and fixed" sections above and below). Guests/expenses/vendors/tasks/dashboard-number-refresh/document-upload are still less thoroughly exercised — pick up there if continuing this pass.
+6. ~~Settings page is a stub~~ **Built.** `src/features/settings/` — full CRUD UI over `list_options`.
+7. ~~Sidebar reorganization~~ **Done, then further reworked into a hamburger+drawer mobile pattern** — see "Routing" above for the current (not the originally-planned) shape.
+8. **Wedding rename/delete** — added since the original phases. `WeddingInfoPage`'s `CoreDetailsForm` now includes an editable `name` field (was previously only settable at creation). Owner-only `DangerZone` component on the same page lets the owner delete the wedding entirely, gated behind a type-the-exact-name-to-confirm `Dialog`.
+9. **Bundle size / perf**: unchanged from original — recharts still makes `BudgetPage`'s chunk the largest (~377KB), acceptable since lazy-loaded.
+10. **No offline support, no PWA manifest** — still not addressed.
+11. **Global Search** — unchanged, client-side filter over already-fetched data, fine at current per-wedding data scale.
+12. **Multi-wedding "which one do I land on" logic** — currently always the most-recently-*created* wedding (weddings query orders by `created_at desc`), not most-recently-*visited*. Discussed but not changed; revisit if a user with several active weddings complains about landing on the wrong one.
 
 ## Things that look like bugs but aren't (save yourself the debugging time)
 

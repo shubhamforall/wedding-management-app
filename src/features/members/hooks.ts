@@ -28,7 +28,7 @@ export function useInviteMember(weddingId: string, weddingName: string) {
 export function useResendInvitation(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (invitationId: string) => api.resendInvitation(invitationId),
+    mutationFn: (invitationId: string) => api.resendInvitation(weddingId, invitationId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: invitationsQueryKey(weddingId) }),
   });
 }
@@ -36,7 +36,7 @@ export function useResendInvitation(weddingId: string) {
 export function useRevokeInvitation(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (invitationId: string) => api.revokeInvitation(invitationId),
+    mutationFn: (invitationId: string) => api.revokeInvitation(weddingId, invitationId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: invitationsQueryKey(weddingId) }),
   });
 }
@@ -44,7 +44,8 @@ export function useRevokeInvitation(weddingId: string) {
 export function useChangeMemberRole(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ memberId, role }: { memberId: string; role: WeddingRole }) => api.changeMemberRole(memberId, role),
+    mutationFn: ({ memberId, role }: { memberId: string; role: WeddingRole }) =>
+      api.changeMemberRole(weddingId, memberId, role),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: membersQueryKey(weddingId) }),
   });
 }
@@ -52,7 +53,7 @@ export function useChangeMemberRole(weddingId: string) {
 export function useRemoveMember(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (memberId: string) => api.removeMember(memberId),
+    mutationFn: (memberId: string) => api.removeMember(weddingId, memberId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: membersQueryKey(weddingId) }),
   });
 }
@@ -60,8 +61,8 @@ export function useRemoveMember(weddingId: string) {
 export function useTransferOwnership(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ currentOwnerMemberId, newOwnerMemberId }: { currentOwnerMemberId: string; newOwnerMemberId: string }) =>
-      api.transferOwnership(currentOwnerMemberId, newOwnerMemberId),
+    mutationFn: ({ newOwnerMemberId }: { currentOwnerMemberId: string; newOwnerMemberId: string }) =>
+      api.transferOwnership(weddingId, newOwnerMemberId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: membersQueryKey(weddingId) }),
   });
 }

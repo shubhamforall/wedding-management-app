@@ -24,7 +24,7 @@ export function useCreateTask(weddingId: string) {
 export function useUpdateTask(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: TaskInput }) => api.updateTask(id, input),
+    mutationFn: ({ id, input }: { id: string; input: TaskInput }) => api.updateTask(weddingId, id, input),
     onSuccess: () => invalidate(queryClient, weddingId),
   });
 }
@@ -32,7 +32,7 @@ export function useUpdateTask(weddingId: string) {
 export function useDeleteTask(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.deleteTask(id),
+    mutationFn: (id: string) => api.deleteTask(weddingId, id),
     onSuccess: () => invalidate(queryClient, weddingId),
   });
 }

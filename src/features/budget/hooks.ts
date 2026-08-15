@@ -10,7 +10,7 @@ export function useBudgetSummary(weddingId: string) {
 export function useUpdateEstimatedAmount(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, amount }: { id: string; amount: number }) => updateEstimatedAmount(id, amount),
+    mutationFn: ({ id, amount }: { id: string; amount: number }) => updateEstimatedAmount(weddingId, id, amount),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: budgetQueryKey(weddingId) }),
   });
 }

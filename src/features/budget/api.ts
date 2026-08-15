@@ -1,23 +1,12 @@
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
+import { toSnakeCaseArray } from '@/lib/caseMapping';
 import type { BudgetSummaryRow } from './types';
 
 export async function fetchBudgetSummary(weddingId: string): Promise<BudgetSummaryRow[]> {
-  const { data, error } = await supabase
-    .from('budget_summary')
-    .select('*')
-    .eq('wedding_id', weddingId)
-    .order('category', { ascending: true })
-    .returns<BudgetSummaryRow[]>();
-
-  if (error) throw error;
-  return data ?? [];
+  const { lines } = await api.get<{ lines: Record<string, unknown>[] }>(`/weddings/${weddingId}/budget-summary`);
+  return toSnakeCaseArray<BudgetSummaryRow>(lines);
 }
 
-export async function updateEstimatedAmount(budgetLineId: string, estimatedAmount: number) {
-  const { error } = await supabase
-    .from('budget_lines')
-    .update({ estimated_amount: estimatedAmount })
-    .eq('id', budgetLineId);
-
-  if (error) throw error;
+export async function updateEstimatedAmount(weddingId: string, budgetLineId: string, estimatedAmount: number) {
+  await api.patch(`/weddings/${weddingId}/budget-lines/${budgetLineId}`, { estimatedAmount });
 }

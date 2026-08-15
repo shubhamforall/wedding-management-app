@@ -26,7 +26,7 @@ export function useCreateListOption(weddingId: string, listType: ListType) {
 export function useUpdateListOptionValue(weddingId: string, listType: ListType) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, value }: { id: string; value: string }) => api.updateListOptionValue(id, value),
+    mutationFn: ({ id, value }: { id: string; value: string }) => api.updateListOptionValue(weddingId, id, value),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: listOptionsKey(weddingId, listType) }),
   });
 }
@@ -35,7 +35,7 @@ export function useReorderListOptions(weddingId: string, listType: ListType) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (updates: { id: string; sort_order: number }[]) => {
-      await Promise.all(updates.map((u) => api.updateListOptionOrder(u.id, u.sort_order)));
+      await Promise.all(updates.map((u) => api.updateListOptionOrder(weddingId, u.id, u.sort_order)));
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: listOptionsKey(weddingId, listType) }),
   });
@@ -44,7 +44,7 @@ export function useReorderListOptions(weddingId: string, listType: ListType) {
 export function useDeleteListOption(weddingId: string, listType: ListType) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.deleteListOption(id),
+    mutationFn: (id: string) => api.deleteListOption(weddingId, id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: listOptionsKey(weddingId, listType) }),
   });
 }

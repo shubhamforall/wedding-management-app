@@ -54,11 +54,14 @@ export interface NavGroup {
 const allSidebarItems = [...primaryNav, ...secondaryNav];
 const byLabel = (label: string) => allSidebarItems.find((item) => item.label === label)!;
 
-// Top: workspace-level nav (overview + collaboration/utility, not wedding
-// data entry). Bottom: every module that's actually wedding planning
-// content. Two visually separated groups — avoids the flat list mixing
-// "manage the workspace" with "plan the wedding". Search and Notifications
-// are deliberately excluded: Notifications lives as the bell icon in
+// Top: Dashboard only — the one workspace-level overview link left in the
+// sidebar. Bottom: every module that's actually wedding planning content.
+// Members, Settings, and Wedding Info are deliberately excluded here: they
+// moved to the profile panel (see AccountPanel.tsx), triggered from the
+// top-bar avatar, since they're account/workspace-management surfaces
+// visited far less often than the planning modules below — keeping them
+// out of the sidebar keeps that list to what's used daily. Search and
+// Notifications are also excluded: Notifications lives as the bell icon in
 // AppShell's top-right corner, and Search is a direct input rendered
 // inline above this nav (see Sidebar.tsx) rather than a link to a page.
 // This is the single nav source for both desktop (fixed rail) and mobile
@@ -66,12 +69,11 @@ const byLabel = (label: string) => allSidebarItems.find((item) => item.label ===
 export const sidebarNavGroups: NavGroup[] = [
   {
     label: null,
-    items: [byLabel('Dashboard'), byLabel('Members'), byLabel('Settings')],
+    items: [byLabel('Dashboard')],
   },
   {
-    label: 'Wedding Planning',
+    label: null,
     items: [
-      byLabel('Wedding Info'),
       byLabel('Guests'),
       byLabel('Finance'),
       byLabel('Tasks'),
@@ -85,3 +87,6 @@ export const sidebarNavGroups: NavGroup[] = [
     ],
   },
 ];
+
+// Consumed by AccountPanel.tsx — the three items moved out of the sidebar.
+export const accountPanelNav: NavItem[] = [byLabel('Wedding Info'), byLabel('Members'), byLabel('Settings')];

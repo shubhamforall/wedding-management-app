@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { Bell, Menu } from 'lucide-react';
+import { Bell, Menu, User } from 'lucide-react';
 import { Sidebar } from './Sidebar';
+import { AccountPanel } from './AccountPanel';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { WeddingProvider, useCurrentWedding } from '@/features/weddings/WeddingProvider';
 import { useUnreadNotificationsCount } from '@/features/notifications/hooks';
+import { useAuth } from '@/features/auth/AuthProvider';
 
 function NotificationButton() {
   const { wedding } = useCurrentWedding();
@@ -26,10 +28,38 @@ function NotificationButton() {
   );
 }
 
+function ProfileButton({ onClick }: { onClick: () => void }) {
+  const { user } = useAuth();
+
+  if (user?.avatarUrl) {
+    return (
+      <button
+        type="button"
+        aria-label="Open account panel"
+        onClick={onClick}
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      >
+        <img src={user.avatarUrl} alt={user.fullName ?? user.email} className="h-9 w-9 rounded-full object-cover" />
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      aria-label="Open account panel"
+      onClick={onClick}
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-bg-raised text-text-muted transition-colors hover:bg-bg-subtle hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+    >
+      <User className="h-4.5 w-4.5" />
+    </button>
+  );
+}
+
 // A real row in the document flow, not a fixed overlay — every page's own
 // top-right button (Add Task, Add Family, ...) lives in normal page content
 // below this, so nothing can ever render underneath/behind these icons.
-function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
+function TopBar({ onMenuClick, onProfileClick }: { onMenuClick: () => void; onProfileClick: () => void }) {
   return (
     <div className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border bg-bg/95 px-4 py-3 backdrop-blur md:justify-end md:px-6">
       <button
@@ -43,6 +73,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
       <div className="flex items-center gap-3">
         <ThemeToggle />
         <NotificationButton />
+        <ProfileButton onClick={onProfileClick} />
       </div>
     </div>
   );
@@ -50,15 +81,17 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
 
 export function AppShell() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [accountPanelOpen, setAccountPanelOpen] = useState(false);
 
   return (
     <WeddingProvider>
       <div className="min-h-screen bg-bg">
         <Sidebar mobileOpen={mobileNavOpen} onMobileClose={() => setMobileNavOpen(false)} />
         <main className="min-h-screen md:ml-64">
-          <TopBar onMenuClick={() => setMobileNavOpen(true)} />
+          <TopBar onMenuClick={() => setMobileNavOpen(true)} onProfileClick={() => setAccountPanelOpen(true)} />
           <Outlet />
         </main>
+        <AccountPanel open={accountPanelOpen} onClose={() => setAccountPanelOpen(false)} />
       </div>
     </WeddingProvider>
   );

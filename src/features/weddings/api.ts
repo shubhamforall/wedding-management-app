@@ -1,28 +1,14 @@
-import { supabase } from '@/lib/supabase';
-import type { Wedding, WeddingInsert, WeddingRole } from '@/types/database';
+import { api } from '@/lib/api';
+import { toSnakeCaseObject, toSnakeCaseArray } from '@/lib/caseMapping';
+import type { Wedding, WeddingRole } from '@/types/database';
 
 export interface WeddingWithRole extends Wedding {
   role: WeddingRole;
 }
 
-interface MembershipRow {
-  role: WeddingRole;
-  weddings: Wedding | null;
-}
-
 export async function fetchMyWeddings(): Promise<WeddingWithRole[]> {
-  const { data, error } = await supabase
-    .from('wedding_members')
-    .select('role, weddings(*)')
-    .eq('status', 'active')
-    .order('created_at', { referencedTable: 'weddings', ascending: false })
-    .returns<MembershipRow[]>();
-
-  if (error) throw error;
-
-  return (data ?? [])
-    .filter((row): row is MembershipRow & { weddings: Wedding } => row.weddings !== null)
-    .map((row) => ({ ...row.weddings, role: row.role }));
+  const { weddings } = await api.get<{ weddings: Record<string, unknown>[] }>('/weddings');
+  return toSnakeCaseArray<WeddingWithRole>(weddings);
 }
 
 export interface CreateWeddingInput {
@@ -36,22 +22,20 @@ export interface CreateWeddingInput {
 }
 
 export async function createWedding(input: CreateWeddingInput): Promise<Wedding> {
-  const { data: userRes, error: userError } = await supabase.auth.getUser();
-  if (userError) throw userError;
-  if (!userRes.user) throw new Error('Not signed in.');
-
-  const payload: WeddingInsert = { ...input, owner_id: userRes.user.id };
-
-  const { data, error } = await supabase.from('weddings').insert(payload).select().single();
-
-  if (error) throw error;
-  if (!data) throw new Error('Wedding creation returned no data.');
-  return data as Wedding;
+  const { wedding } = await api.post<{ wedding: Record<string, unknown> }>('/weddings', {
+    name: input.name,
+    brideName: input.bride_name,
+    groomName: input.groom_name,
+    weddingDate: input.wedding_date ?? null,
+    receptionDate: input.reception_date ?? null,
+    venue: input.venue ?? null,
+    weddingSide: input.wedding_side,
+  });
+  return toSnakeCaseObject<Wedding>(wedding);
 }
 
 export async function deleteWedding(weddingId: string) {
-  const { error } = await supabase.from('weddings').delete().eq('id', weddingId);
-  if (error) throw error;
+  await api.delete(`/weddings/${weddingId}`);
 }
 
 export interface MyPendingInvitation {
@@ -63,20 +47,7 @@ export interface MyPendingInvitation {
   expires_at: string;
 }
 
-// Relies entirely on RLS ("invitees can view own pending invite": email =
-// their JWT email, status = 'pending') to scope this to the signed-in
-// user — no email filter needed client-side. Can't join to `weddings` for
-// the name since the invitee isn't a member yet and that table's RLS would
-// block it; wedding_name is denormalized onto the invitation row instead
-// (see migration 0012) specifically so this query doesn't need that join.
 export async function fetchMyPendingInvitations(): Promise<MyPendingInvitation[]> {
-  const { data, error } = await supabase
-    .from('wedding_invitations')
-    .select('id, wedding_id, wedding_name, role, token, expires_at')
-    .eq('status', 'pending')
-    .order('created_at', { ascending: false })
-    .returns<MyPendingInvitation[]>();
-
-  if (error) throw error;
-  return data ?? [];
+  const { invitations } = await api.get<{ invitations: Record<string, unknown>[] }>('/invitations/my-pending');
+  return toSnakeCaseArray<MyPendingInvitation>(invitations);
 }

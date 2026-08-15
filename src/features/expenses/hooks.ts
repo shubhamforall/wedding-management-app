@@ -32,7 +32,7 @@ export function useCreateExpense(weddingId: string) {
 export function useUpdateExpense(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: ExpenseInput }) => api.updateExpense(id, input),
+    mutationFn: ({ id, input }: { id: string; input: ExpenseInput }) => api.updateExpense(weddingId, id, input),
     onSuccess: () => invalidateExpenseDerived(queryClient, weddingId),
   });
 }
@@ -40,7 +40,7 @@ export function useUpdateExpense(weddingId: string) {
 export function useDeleteExpense(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.deleteExpense(id),
+    mutationFn: (id: string) => api.deleteExpense(weddingId, id),
     onSuccess: () => invalidateExpenseDerived(queryClient, weddingId),
   });
 }

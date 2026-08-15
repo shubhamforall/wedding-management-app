@@ -1,4 +1,5 @@
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
+import { toCamelCaseObject, toSnakeCaseArray } from '@/lib/caseMapping';
 import type {
   EmergencyContact,
   EmergencyContactInput,
@@ -8,58 +9,43 @@ import type {
 } from './types';
 
 export async function updateWeddingInfo(weddingId: string, input: WeddingInfoInput) {
-  const { error } = await supabase.from('weddings').update(input).eq('id', weddingId);
-  if (error) throw error;
+  await api.patch(`/weddings/${weddingId}`, toCamelCaseObject(input));
 }
 
 export async function fetchEmergencyContacts(weddingId: string): Promise<EmergencyContact[]> {
-  const { data, error } = await supabase
-    .from('emergency_contacts')
-    .select('*')
-    .eq('wedding_id', weddingId)
-    .order('created_at', { ascending: true })
-    .returns<EmergencyContact[]>();
-  if (error) throw error;
-  return data ?? [];
+  const { items } = await api.get<{ items: Record<string, unknown>[] }>(
+    `/weddings/${weddingId}/emergency-contacts`
+  );
+  return toSnakeCaseArray<EmergencyContact>(items);
 }
 
 export async function createEmergencyContact(weddingId: string, input: EmergencyContactInput) {
-  const { error } = await supabase.from('emergency_contacts').insert({ ...input, wedding_id: weddingId });
-  if (error) throw error;
+  await api.post(`/weddings/${weddingId}/emergency-contacts`, toCamelCaseObject(input));
 }
 
-export async function updateEmergencyContact(id: string, input: EmergencyContactInput) {
-  const { error } = await supabase.from('emergency_contacts').update(input).eq('id', id);
-  if (error) throw error;
+export async function updateEmergencyContact(weddingId: string, id: string, input: EmergencyContactInput) {
+  await api.patch(`/weddings/${weddingId}/emergency-contacts/${id}`, toCamelCaseObject(input));
 }
 
-export async function deleteEmergencyContact(id: string) {
-  const { error } = await supabase.from('emergency_contacts').delete().eq('id', id);
-  if (error) throw error;
+export async function deleteEmergencyContact(weddingId: string, id: string) {
+  await api.delete(`/weddings/${weddingId}/emergency-contacts/${id}`);
 }
 
 export async function fetchImportantNumbers(weddingId: string): Promise<ImportantNumber[]> {
-  const { data, error } = await supabase
-    .from('important_numbers')
-    .select('*')
-    .eq('wedding_id', weddingId)
-    .order('created_at', { ascending: true })
-    .returns<ImportantNumber[]>();
-  if (error) throw error;
-  return data ?? [];
+  const { items } = await api.get<{ items: Record<string, unknown>[] }>(
+    `/weddings/${weddingId}/important-numbers`
+  );
+  return toSnakeCaseArray<ImportantNumber>(items);
 }
 
 export async function createImportantNumber(weddingId: string, input: ImportantNumberInput) {
-  const { error } = await supabase.from('important_numbers').insert({ ...input, wedding_id: weddingId });
-  if (error) throw error;
+  await api.post(`/weddings/${weddingId}/important-numbers`, toCamelCaseObject(input));
 }
 
-export async function updateImportantNumber(id: string, input: ImportantNumberInput) {
-  const { error } = await supabase.from('important_numbers').update(input).eq('id', id);
-  if (error) throw error;
+export async function updateImportantNumber(weddingId: string, id: string, input: ImportantNumberInput) {
+  await api.patch(`/weddings/${weddingId}/important-numbers/${id}`, toCamelCaseObject(input));
 }
 
-export async function deleteImportantNumber(id: string) {
-  const { error } = await supabase.from('important_numbers').delete().eq('id', id);
-  if (error) throw error;
+export async function deleteImportantNumber(weddingId: string, id: string) {
+  await api.delete(`/weddings/${weddingId}/important-numbers/${id}`);
 }

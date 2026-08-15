@@ -19,7 +19,7 @@ export function useCreateGuest(weddingId: string) {
 export function useUpdateGuest(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: GuestInput }) => api.updateGuest(id, input),
+    mutationFn: ({ id, input }: { id: string; input: GuestInput }) => api.updateGuest(weddingId, id, input),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: guestsQueryKey(weddingId) }),
   });
 }
@@ -27,7 +27,7 @@ export function useUpdateGuest(weddingId: string) {
 export function useDeleteGuest(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.deleteGuest(id),
+    mutationFn: (id: string) => api.deleteGuest(weddingId, id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: guestsQueryKey(weddingId) }),
   });
 }

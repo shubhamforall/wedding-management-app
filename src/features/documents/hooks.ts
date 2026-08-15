@@ -19,7 +19,8 @@ export function useUploadDocument(weddingId: string) {
 export function useUpdateDocumentMeta(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, meta }: { id: string; meta: DocumentMetaInput }) => api.updateDocumentMeta(id, meta),
+    mutationFn: ({ id, meta }: { id: string; meta: DocumentMetaInput }) =>
+      api.updateDocumentMeta(weddingId, id, meta),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: documentsQueryKey(weddingId) }),
   });
 }
@@ -27,7 +28,7 @@ export function useUpdateDocumentMeta(weddingId: string) {
 export function useDeleteDocument(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, storagePath }: { id: string; storagePath: string }) => api.deleteDocument(id, storagePath),
+    mutationFn: ({ id }: { id: string; storagePath: string }) => api.deleteDocument(weddingId, id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: documentsQueryKey(weddingId) }),
   });
 }

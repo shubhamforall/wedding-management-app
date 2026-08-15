@@ -27,7 +27,7 @@ export function useCreateVendor(weddingId: string) {
 export function useUpdateVendor(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: VendorInput }) => api.updateVendor(id, input),
+    mutationFn: ({ id, input }: { id: string; input: VendorInput }) => api.updateVendor(weddingId, id, input),
     onSuccess: () => invalidateVendorDerived(queryClient, weddingId),
   });
 }
@@ -35,7 +35,7 @@ export function useUpdateVendor(weddingId: string) {
 export function useDeleteVendor(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.deleteVendor(id),
+    mutationFn: (id: string) => api.deleteVendor(weddingId, id),
     onSuccess: () => invalidateVendorDerived(queryClient, weddingId),
   });
 }

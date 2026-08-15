@@ -19,7 +19,8 @@ export function useCreateTimelineEvent(weddingId: string) {
 export function useUpdateTimelineEvent(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: TimelineEventInput }) => api.updateTimelineEvent(id, input),
+    mutationFn: ({ id, input }: { id: string; input: TimelineEventInput }) =>
+      api.updateTimelineEvent(weddingId, id, input),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: timelineQueryKey(weddingId) }),
   });
 }
@@ -27,7 +28,7 @@ export function useUpdateTimelineEvent(weddingId: string) {
 export function useDeleteTimelineEvent(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.deleteTimelineEvent(id),
+    mutationFn: (id: string) => api.deleteTimelineEvent(weddingId, id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: timelineQueryKey(weddingId) }),
   });
 }

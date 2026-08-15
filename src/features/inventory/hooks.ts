@@ -24,7 +24,8 @@ export function useCreateInventoryItem(weddingId: string) {
 export function useUpdateInventoryItem(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: InventoryItemInput }) => api.updateInventoryItem(id, input),
+    mutationFn: ({ id, input }: { id: string; input: InventoryItemInput }) =>
+      api.updateInventoryItem(weddingId, id, input),
     onSuccess: () => invalidate(queryClient, weddingId),
   });
 }
@@ -32,7 +33,7 @@ export function useUpdateInventoryItem(weddingId: string) {
 export function useDeleteInventoryItem(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.deleteInventoryItem(id),
+    mutationFn: (id: string) => api.deleteInventoryItem(weddingId, id),
     onSuccess: () => invalidate(queryClient, weddingId),
   });
 }

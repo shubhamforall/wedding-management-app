@@ -1,14 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Check, ChevronDown, Heart, LogOut, Plus, Search, X } from 'lucide-react';
+import { Check, ChevronDown, Plus, Search, X } from 'lucide-react';
 import { sidebarNavGroups } from '@/app/navigation';
 import { cn } from '@/lib/cn';
-import { Avatar } from '@/components/ui/Avatar';
 import { Input } from '@/components/ui/Input';
 import { useCurrentWedding } from '@/features/weddings/WeddingProvider';
 import { useMyWeddings } from '@/features/weddings/hooks';
-import { useAuth } from '@/features/auth/AuthProvider';
-import { signOut } from '@/features/auth/api';
 
 interface SidebarProps {
   mobileOpen: boolean;
@@ -17,7 +14,6 @@ interface SidebarProps {
 
 export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const { wedding, role } = useCurrentWedding();
-  const { user } = useAuth();
   const { data: weddings } = useMyWeddings();
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
   const switcherRef = useRef<HTMLDivElement>(null);
@@ -25,8 +21,6 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const switcherWeddings = weddings && weddings.length > 0 ? weddings : [{ ...wedding, role }];
-  const userName = typeof user?.user_metadata.full_name === 'string' ? user.user_metadata.full_name : null;
-  const avatarUrl = typeof user?.user_metadata.avatar_url === 'string' ? user.user_metadata.avatar_url : null;
 
   function submitSearch() {
     const q = searchValue.trim();
@@ -93,9 +87,6 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
           aria-expanded={isSwitcherOpen}
           onClick={() => setIsSwitcherOpen((open) => !open)}
         >
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-primary text-primary-fg">
-            <Heart className="h-4 w-4" fill="currentColor" />
-          </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-text">{wedding.name}</p>
             <p className="text-xs text-text-muted">Wedding workspace</p>
@@ -191,24 +182,6 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
           </div>
         ))}
       </nav>
-
-      <div className="border-t border-border pt-3">
-        <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-bg-subtle p-2">
-          <Avatar name={userName} email={user?.email} avatarUrl={avatarUrl} size="sm" />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-text">{userName ?? 'User profile'}</p>
-            <p className="truncate text-xs text-text-muted">{user?.email}</p>
-          </div>
-          <button
-            type="button"
-            aria-label="Logout"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-text-muted transition-colors hover:bg-bg-raised hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            onClick={() => signOut()}
-          >
-            <LogOut className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
     </>
   );
 

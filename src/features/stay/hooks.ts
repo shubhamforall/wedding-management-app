@@ -24,7 +24,8 @@ export function useCreateStayArrangement(weddingId: string) {
 export function useUpdateStayArrangement(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: StayArrangementInput }) => api.updateStayArrangement(id, input),
+    mutationFn: ({ id, input }: { id: string; input: StayArrangementInput }) =>
+      api.updateStayArrangement(weddingId, id, input),
     onSuccess: () => invalidate(queryClient, weddingId),
   });
 }
@@ -32,7 +33,7 @@ export function useUpdateStayArrangement(weddingId: string) {
 export function useDeleteStayArrangement(weddingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.deleteStayArrangement(id),
+    mutationFn: (id: string) => api.deleteStayArrangement(weddingId, id),
     onSuccess: () => invalidate(queryClient, weddingId),
   });
 }
