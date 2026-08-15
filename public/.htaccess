@@ -1,0 +1,13 @@
+# SPA fallback — React Router handles client-side routes like /auth/login,
+# /w/:weddingId, etc. Without this, a direct request or page refresh on any
+# of those paths 404s, since no such file exists on disk — only index.html
+# does. Serve index.html for anything that isn't a real file/directory and
+# let the client-side router take over from there.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
