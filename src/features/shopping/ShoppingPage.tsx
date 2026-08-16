@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Pencil, Trash2, ShoppingBag } from 'lucide-react';
+import { Plus, Pencil, Trash2, ShoppingBag, Sparkles } from 'lucide-react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { useCurrentWedding } from '@/features/weddings/WeddingProvider';
 import { useListOptions } from '@/hooks/useListOptions';
@@ -132,10 +132,16 @@ export function ShoppingPage() {
             ]}
           />
           {canEdit && (
-            <Button size="sm" onClick={openCreate}>
-              <Plus className="h-4 w-4" />
-              Add Item
-            </Button>
+            <>
+              <Button size="sm" variant="secondary" onClick={openCreate} className="border-primary/30 text-primary hover:bg-primary/10">
+                <Sparkles className="h-4 w-4" />
+                Scan Receipt / Doc
+              </Button>
+              <Button size="sm" onClick={openCreate}>
+                <Plus className="h-4 w-4" />
+                Add Item
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -179,13 +185,19 @@ export function ShoppingPage() {
         <EmptyState
           icon={ShoppingBag}
           title={items?.length ? 'No items match your search' : 'No shopping items yet'}
-          description={items?.length ? 'Try a different search or filter.' : 'Add your first item to get started.'}
+          description={items?.length ? 'Try a different search or filter.' : 'Add items manually or scan receipts & bills to auto-fill.'}
           action={
             canEdit && !items?.length ? (
-              <Button onClick={openCreate}>
-                <Plus className="h-4 w-4" />
-                Add Item
-              </Button>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <Button variant="secondary" onClick={openCreate} className="border-primary/30 text-primary hover:bg-primary/10">
+                  <Sparkles className="h-4 w-4" />
+                  Scan Receipt or Document
+                </Button>
+                <Button onClick={openCreate}>
+                  <Plus className="h-4 w-4" />
+                  Add Item
+                </Button>
+              </div>
             ) : undefined
           }
         />

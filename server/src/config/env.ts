@@ -7,7 +7,7 @@ function required(name: string): string {
 }
 
 export const env = {
-  port: Number(process.env.PORT ?? 3000),
+  port: Number(process.env.PORT ?? 5001),
   nodeEnv: process.env.NODE_ENV ?? 'development',
   isProduction: process.env.NODE_ENV === 'production',
 
@@ -44,6 +44,6 @@ export const env = {
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID ?? '',
     clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
-    redirectUri: process.env.GOOGLE_REDIRECT_URI ?? `http://localhost:${process.env.PORT ?? 3000}/api/auth/google/callback`,
+    redirectUri: process.env.GOOGLE_REDIRECT_URI ?? `http://localhost:${process.env.PORT ?? 5001}/api/auth/google/callback`,
   },
 };

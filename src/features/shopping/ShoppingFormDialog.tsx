@@ -1,12 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
+import { Sparkles } from 'lucide-react';
 import { Dialog } from '@/components/ui/Dialog';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
 import { useListOptions } from '@/hooks/useListOptions';
+import { DocumentUploadZone } from './DocumentUploadZone';
+import type { ExtractedShoppingData } from './utils/shoppingParser';
 import { useCreateShoppingItem, useUpdateShoppingItem } from './hooks';
 import type { ShoppingItem, ShoppingItemInput } from './types';
 
@@ -36,15 +39,22 @@ export function ShoppingFormDialog({
   const createShoppingItem = useCreateShoppingItem(weddingId);
   const updateShoppingItem = useUpdateShoppingItem(weddingId);
 
+  const [hasAutofilled, setHasAutofilled] = useState(false);
+
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<ShoppingItemInput>({ defaultValues: emptyValues });
 
+  const categories = categoryOptions?.map((o) => o.value) ?? [];
+  const familyMembers = familyMemberOptions?.map((o) => o.value) ?? [];
+
   useEffect(() => {
     if (open) {
+      setHasAutofilled(false);
       reset(
         shoppingItem
           ? { ...shoppingItem }
@@ -52,6 +62,36 @@ export function ShoppingFormDialog({
       );
     }
   }, [open, shoppingItem, reset, categoryOptions, statusOptions]);
+
+  const handleOcrExtracted = (data: ExtractedShoppingData) => {
+    if (data.primary.item) {
+      setValue('item', data.primary.item, { shouldValidate: true, shouldDirty: true });
+    }
+    if (data.primary.actual_cost !== undefined) {
+      setValue('actual_cost', data.primary.actual_cost, { shouldValidate: true, shouldDirty: true });
+    }
+    if (data.primary.category) {
+      setValue('category', data.primary.category, { shouldValidate: true, shouldDirty: true });
+    }
+    if (data.primary.responsible_person) {
+      setValue('responsible_person', data.primary.responsible_person, { shouldValidate: true, shouldDirty: true });
+    }
+    if (data.primary.status) {
+      setValue('status', data.primary.status, { shouldValidate: true, shouldDirty: true });
+    }
+    if (data.primary.notes) {
+      setValue('notes', data.primary.notes, { shouldValidate: true, shouldDirty: true });
+    }
+    setHasAutofilled(true);
+  };
+
+  const handleItemSelect = (item: { item: string; actual_cost: number; category: string; notes?: string }) => {
+    setValue('item', item.item, { shouldValidate: true, shouldDirty: true });
+    setValue('actual_cost', item.actual_cost, { shouldValidate: true, shouldDirty: true });
+    if (item.category) {
+      setValue('category', item.category, { shouldValidate: true, shouldDirty: true });
+    }
+  };
 
   const isPending = createShoppingItem.isPending || updateShoppingItem.isPending;
 
@@ -71,9 +111,29 @@ export function ShoppingFormDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title={shoppingItem ? 'Edit Item' : 'Add Item'}>
+    <Dialog open={open} onClose={onClose} title={shoppingItem ? 'Edit Item' : 'Add Shopping Item'}>
+      {/* OCR Auto-Fill Document & Receipt Zone */}
+      <DocumentUploadZone
+        availableCategories={categories}
+        availableFamilyMembers={familyMembers}
+        onDataExtracted={handleOcrExtracted}
+        onItemSelect={handleItemSelect}
+      />
+
+      {hasAutofilled && (
+        <div className="mb-3 flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs text-primary">
+          <Sparkles className="h-3.5 w-3.5" />
+          <span>Fields populated from your document. You can review, edit, and save below.</span>
+        </div>
+      )}
+
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-        <Input label="Item" error={errors.item?.message} {...register('item', { required: 'Item is required' })} />
+        <Input
+          label="Item Name"
+          placeholder="e.g. Bridal Lehenga, Royal Sherwani, Gold Ring"
+          error={errors.item?.message}
+          {...register('item', { required: 'Item name is required' })}
+        />
 
         <div className="grid grid-cols-2 gap-4">
           <Select label="Category" {...register('category')}>
@@ -111,7 +171,12 @@ export function ShoppingFormDialog({
           </Select>
         </div>
 
-        <Textarea label="Notes" {...register('notes')} />
+        <Textarea
+          label="Notes / Store & Bill Details"
+          placeholder="Vendor/store name, invoice number, alteration notes, or item breakdown"
+          rows={3}
+          {...register('notes')}
+        />
 
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="secondary" onClick={onClose}>
@@ -125,3 +190,4 @@ export function ShoppingFormDialog({
     </Dialog>
   );
 }
+
